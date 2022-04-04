@@ -1,7 +1,8 @@
 #include <dirent.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/errno.h>
+#include <sys/stat.h>
 
 // eva
 #include <base/log.h>
@@ -20,6 +21,23 @@ main()
         if (err) {
                 logFatal("fatal error");
                 errDump("failed to list files.");
+        }
+
+        // test dangling link
+        {
+                struct stat statbuf;
+                // const char* test_file = "tests/a/d"; // exist file
+                // const char* test_file = "tests/a/e"; // exist dir
+                const char *test_file = "tests/a/non-exist";  // dangling link
+
+                logInfo("test file: %s", test_file);
+                if (stat(test_file, &statbuf)) {
+                        logFatal("error: %d (ENOENT: %d)  -- %s", errno,
+                                 errno == ENOENT, strerror(errno));
+                } else {
+                        logInfo("is file: %d", S_ISREG(statbuf.st_mode));
+                        logInfo("is dir: %d", S_ISDIR(statbuf.st_mode));
+                }
         }
         return 0;
 }
