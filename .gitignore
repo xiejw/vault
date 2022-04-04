@@ -1,0 +1,7 @@
+# outputs
+.build*
+
+# vim
+*.swo
+*.swp
+
