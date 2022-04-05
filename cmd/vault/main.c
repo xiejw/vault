@@ -22,7 +22,10 @@ struct ft_node *ftNodeNew(void);
 static void ftNodeFree(struct ft_node *);
 void ftFree(struct ft_node *root);
 
-static error_t listFiles(const char *dirpath);
+static error_t listFiles(struct arr *);
+
+#define STACK_PUSH(stk, ele) *(__typeof__(ele) *)arrPush((stk)) = (ele)
+#define STACK_POP(stk, type) (*(type *)arrPop((stk)))
 
 int
 main()
@@ -31,14 +34,16 @@ main()
 
         logInfo("hello vault\n");
 
-        struct arr *arr = arrNewStack(sizeof(struct ft_node *), 128, 1024);
+        struct arr *stack = arrNewStack(sizeof(struct ft_node *), 128, 1024);
 
         struct ft_node *root = ftNodeNew();
-        root->parent         = NULL;
-        root->root_dir       = sdsNew("test/a");
-        root->path           = NULL;
+        root->root_dir       = sdsNew("tests/a");
 
-        err = listFiles("tests/a");
+        STACK_PUSH(stack, root);
+
+        // *(struct ft_node **)(arrPush(stack)) = root;
+
+        err = listFiles(stack);
         if (err) {
                 logFatal("fatal error");
                 errDump("failed to list files.");
@@ -63,19 +68,28 @@ main()
         // }
 
         ftFree(root);
-        arrFree(arr);
+        arrFree(stack);
         return 0;
 }
 
+// TODO join path
+
 error_t
-listFiles(const char *dirpath)
+listFiles(struct arr *stack)
 {
+        error_t err;
         struct dirent *dp;
-        DIR *dirp = opendir(dirpath);
+
+        struct ft_node* parent = STACK_POP(stack, struct ft_node *);
+
+        const char *dirpath = parent->root_dir;
+        DIR *dirp           = opendir(dirpath);
         if (dirp == NULL) {
                 return errNew("failed to open dir: %s", dirpath);
         }
 
+        err = OK;
+        struct ft_node* child;
         for (;;) {
                 // stage 1. read entry from dirp.
                 errno = 0;              // to distingush err from end-of-dir.
@@ -83,6 +97,8 @@ listFiles(const char *dirpath)
                 if (dp == NULL) break;  // either error or end-of-dir
 
                 // stage 2: clean up
+                //
+                // TODO: skip hidden file as well.
                 if (strcmp(dp->d_name, ".") == 0 ||
                     strcmp(dp->d_name, "..") == 0)
                         continue;  // skip . and ..
@@ -90,36 +106,45 @@ listFiles(const char *dirpath)
                 // stage 3: handling
                 logInfo("entry: %s", dp->d_name);
 
+                child = ftNodeNew();
+                child->parent = parent;
+                child->root_dir = parent->root_dir; // alias
+                child->path = sdsNew(dp->d_name); // TODO should join
+                vecPushBack(&parent->children, child);
+
                 // stage 4: type
                 switch (dp->d_type) {
                 case DT_DIR:
                         logInfo("  -> is dir");
+
+                        STACK_PUSH(stack, child);
                         break;
                 case DT_REG:
                         logInfo("  -> is reg file");
                         break;
                 case DT_LNK:
                         logInfo("  -> is symbolic link");
+                        // We don't know whether this is a dir or file. Put it
+                        // into the stack so next round we will understand it.
+                        STACK_PUSH(stack, child);
                         break;
                 default:
-                        logFatal("  -> unknown type");
+                        err = errNew("unsupported filetype: %d", dp->d_type);
+                        goto exit;
                 }
         }
 
+exit:
         closedir(dirp);
         if (errno != 0) return errNew("failed to read dir");
 
-        return OK;
+        return err;
 }
 
 struct ft_node *
 ftNodeNew(void)
 {
-        struct ft_node *node = malloc(sizeof(*node));
-
-        // parent, root_dir, path should be set by caller.
-        node->children = vecNew();
-        return node;
+        return calloc(1, sizeof(struct ft_node));
 }
 
 void
