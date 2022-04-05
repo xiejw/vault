@@ -21,11 +21,14 @@ struct ft_node {
 struct ft_node *ftNodeNew(void);
 static void ftNodeFree(struct ft_node *);
 void ftFree(struct ft_node *root);
+void ftDump(int fd, struct ft_node* root);
 
 static error_t listFiles(struct arr *);
 
 #define STACK_PUSH(stk, ele) *(__typeof__(ele) *)arrPush((stk)) = (ele)
-#define STACK_POP(stk, type) (*(type *)arrPop((stk)))
+// #define STACK_POP(stk, type) (*(type *)arrPop((stk)))
+#define STACK_POP_AND_ASSIGN(stk, ele) \
+        (ele) = (*(__typeof__(ele) *)arrPop((stk)))
 
 int
 main()
@@ -67,6 +70,9 @@ main()
         //         }
         // }
 
+
+        ftDump(1, root);
+
         ftFree(root);
         arrFree(stack);
         return 0;
@@ -80,7 +86,9 @@ listFiles(struct arr *stack)
         error_t err;
         struct dirent *dp;
 
-        struct ft_node* parent = STACK_POP(stack, struct ft_node *);
+        struct ft_node *parent;
+        // parent = STACK_POP(stack, struct ft_node *);
+        STACK_POP_AND_ASSIGN(stack, parent);
 
         const char *dirpath = parent->root_dir;
         DIR *dirp           = opendir(dirpath);
@@ -89,7 +97,7 @@ listFiles(struct arr *stack)
         }
 
         err = OK;
-        struct ft_node* child;
+        struct ft_node *child;
         for (;;) {
                 // stage 1. read entry from dirp.
                 errno = 0;              // to distingush err from end-of-dir.
@@ -106,10 +114,10 @@ listFiles(struct arr *stack)
                 // stage 3: handling
                 logInfo("entry: %s", dp->d_name);
 
-                child = ftNodeNew();
-                child->parent = parent;
-                child->root_dir = parent->root_dir; // alias
-                child->path = sdsNew(dp->d_name); // TODO should join
+                child           = ftNodeNew();
+                child->parent   = parent;
+                child->root_dir = parent->root_dir;    // alias
+                child->path     = sdsNew(dp->d_name);  // TODO should join
                 vecPushBack(&parent->children, child);
 
                 // stage 4: type
@@ -182,4 +190,19 @@ ftFree(struct ft_node *root)
 {
         assert(root->parent == NULL);
         ftSubTreeFree(root);
+}
+
+void
+ftDump(int fd, struct ft_node* root) {
+        sds_t space = sdsEmpty();
+
+        if (root-> parent == NULL)
+                dprintf(fd, "%snode (root)\n", space);
+
+        sdsCatPrintf(&space, "    ");
+
+        for (size_t i = 0; i < vecSize(root->children); i++) {
+                struct ft_node* child = root->children[i];
+                dprintf(fd, "%s+-> %s\n", space, child->path);
+        }
 }
