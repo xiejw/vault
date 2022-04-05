@@ -1,0 +1,59 @@
+# vim: ft=help
+
+================================================================================
+readdir and walk tree~
+
+--------------------------------------------------------------------------------
+primitives~
+
+A normal `readdir` procedure is to open the 'DIR' stream first and read all
+directory sub-items from it. POSIX only provides names (no types). However,
+both macOS and linux provide types. The 'inode' number is provided but there
+seems no apis to use it.
+
+So a normal procedure is:
+  - read dir and get names/types.
+  - for sub-dir, get the abs path (by concating them manually) and retry this
+    one again.
+  - for sym links, read the link (i.e., deref) and then check whether it is a
+    file or dir. For dir, try again.
+
+Most of the apis provided posix is based on path. Due to the implementation,
+for a path like '/a/b/c', kernel needs to do the following lookups
+  - one for 'a' and read its content to find the inode of 'b'.
+  - find 'c' from 'b'
+  - read inode 'c'.
+
+This is not efficient. Alternatively, we could
+  - extrace 'fd' from 'DIR'.
+  - call 'fstatat' to get all stats for sub-items faster.
+
+Also for case the 'd_type' is 'DL_LNK' (for readdir) and 'stat' returns
+`ENOENT`, it means it is a dangling link.
+
+--------------------------------------------------------------------------------
+Walk algorithrm and behavior~
+
+A possible walk contract for 'vault' project:
+
+- we will always dereference symbolic links.
+  - rationale: Currently the photo repository does not have links. It is quite
+    self-contained. However, due to the forever increasing size, I have to
+    move photos in old times to external hard drives. For example, for year
+    2013, 2014, 2015, 2016, they are located on hard drives. But symbolic
+    links are created from photo repository to those.
+
+- we will error out if there is any dangling link.
+  - This should not happen. Common cases are 1. files/dirs got moved. 2.
+    external drives are not connected.
+
+- we will sort all names under one directory. dirs first, followed by files.
+  - rationale: this is easy to read and diff.
+
+- we will use path AFTER the root dir. For example, for root dir as '/foo' and
+  the path as 'bar'. The absolute path is '/foo/bar', we will record metadata
+  as '/foo' as rootdir and 'bar' as the item (no leading prefix).
+
+- we will skip all paths starting with ".", which covers ".", "..", and hidden
+  files/dirs (e.g., ".git").
+
