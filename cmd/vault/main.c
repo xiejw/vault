@@ -17,7 +17,7 @@ main()
 
         logInfo("hello vault\n");
 
-        err = listFiles(".");
+        err = listFiles("tests/a");
         if (err) {
                 logFatal("fatal error");
                 errDump("failed to list files.");
@@ -64,6 +64,21 @@ listFiles(const char *dirpath)
 
                 // stage 3: handling
                 logInfo("entry: %s", dp->d_name);
+
+                // stage 4: type
+                switch (dp->d_type) {
+                case DT_DIR:
+                        logInfo("  -> is dir");
+                        break;
+                case DT_REG:
+                        logInfo("  -> is reg file");
+                        break;
+                case DT_LNK:
+                        logInfo("  -> is symbolic link");
+                        break;
+                default:
+                        logFatal("  -> unknown type");
+                }
         }
 
         closedir(dirp);
