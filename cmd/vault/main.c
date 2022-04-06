@@ -21,7 +21,7 @@ struct ft_node {
 struct ft_node *ftNodeNew(void);
 static void ftNodeFree(struct ft_node *);
 void ftFree(struct ft_node *root);
-void ftDump(int fd, struct ft_node* root);
+void ftDump(int fd, struct ft_node *root);
 
 static error_t listFiles(struct arr *);
 
@@ -69,7 +69,6 @@ main()
         //                 logInfo("is dir: %d", S_ISDIR(statbuf.st_mode));
         //         }
         // }
-
 
         ftDump(1, root);
 
@@ -193,16 +192,18 @@ ftFree(struct ft_node *root)
 }
 
 void
-ftDump(int fd, struct ft_node* root) {
+ftDump(int fd, struct ft_node *root)
+{
         sds_t space = sdsEmpty();
 
-        if (root-> parent == NULL)
-                dprintf(fd, "%snode (root)\n", space);
+        if (root->parent == NULL) dprintf(fd, "%snode (root)\n", space);
 
         sdsCatPrintf(&space, "    ");
 
         for (size_t i = 0; i < vecSize(root->children); i++) {
-                struct ft_node* child = root->children[i];
+                struct ft_node *child = root->children[i];
                 dprintf(fd, "%s+-> %s\n", space, child->path);
         }
+
+        sdsFree(space);
 }
