@@ -50,7 +50,7 @@ struct ft_walk_config {
         int dangling_sym_link;  // see FT_XXX above
 };
 
-error_t walkTree(struct arr *, const struct ft_walk_config *);
+error_t walkTree(struct ft_node *, const struct ft_walk_config *);
 static error_t listFiles(struct arr *, const struct ft_walk_config *);
 
 int
@@ -58,20 +58,16 @@ main()
 {
         error_t err;
 
-        struct arr *stack = arrNewStack(sizeof(struct ft_node *), 128, 1024);
-
         struct ft_node *root = ftNodeNew();
         root->root_dir       = sdsNew("tests/a");
         root->path           = sdsEmptyWithCap(0);  // never grow
-        root->is_dir         = 1;                   // TODO check this
-
-        STACK_PUSH(stack, root);
+        root->is_dir         = 1;
 
         struct ft_walk_config cfg = {
             .dangling_sym_link = FT_WARNING,
         };
 
-        err = walkTree(stack, &cfg);
+        err = walkTree(root, &cfg);
         if (err) {
                 logFatal("fatal error");
                 errDump("failed to list files.");
@@ -80,7 +76,6 @@ main()
         ftDump(1, root);
 
         ftFree(root);
-        arrFree(stack);
         return 0;
 }
 
@@ -100,7 +95,7 @@ checkSymLinkType(int dangling_sym_link, struct ft_node *node,
 {
         struct stat statbuf;
         sds_t fs_path = fpJoinSds(node->root_dir, node->path);
-        logDebug("checking symbolic path: %s", fs_path);
+        logTrace("checking symbolic path: %s", fs_path);
 
         if (stat(fs_path, &statbuf) == 0) {
                 *output_flag = S_ISDIR(statbuf.st_mode);
@@ -134,13 +129,18 @@ out:
 }
 
 error_t
-walkTree(struct arr *stack, const struct ft_walk_config *cfg)
+walkTree(struct ft_node *root, const struct ft_walk_config *cfg)
 {
-        error_t err = OK;
+        error_t err       = OK;
+        struct arr *stack = arrNewStack(sizeof(struct ft_node *), 128, 1024);
+        STACK_PUSH(stack, root);
+
+        // TODO check root is truelly a dir.
         while (!arrIsEmpty(stack)) {
                 err = listFiles(stack, cfg);
                 if (err) break;
         }
+        arrFree(stack);
         return err;
 }
 
@@ -148,31 +148,34 @@ error_t
 listFiles(struct arr *stack, const struct ft_walk_config *cfg)
 {
         error_t err = OK;
-        struct dirent *dp;
 
         struct ft_node *parent;
         STACK_POP_AND_ASSIGN(stack, parent);
 
-        sds_t parent_path      = parent->path;  // alias
-        size_t parent_path_len = sdsLen(parent_path);
+        const sds_t parent_path      = parent->path;  // alias
+        const size_t parent_path_len = sdsLen(parent_path);
 
         const char *dirpath = fpJoinSds(parent->root_dir, parent_path);
         DIR *dirp           = opendir(dirpath);
         if (dirp == NULL) return errNew("failed to open dir: %s", dirpath);
 
-        logDebug("readdir: %s", dirpath);
+        logTrace("readdir: %s", dirpath);
+
         struct ft_node *child;
         for (;;) {
+                // ------------------------------------------------------------
                 // stage 1. read entry from dirp.
-                errno = 0;              // to distingush err from end-of-dir.
-                dp    = readdir(dirp);  // TODO use readdir_r
+                errno             = 0;  // to distingush err from end-of-dir.
+                struct dirent *dp = readdir(dirp);
                 if (dp == NULL) break;  // either error or end-of-dir
 
+                // ------------------------------------------------------------
                 // stage 2: skip hidden file, "." and "..".
                 const char *d_name = dp->d_name;
                 assert(dp->d_name[0] != 0);
                 if (d_name[0] == '.') continue;
 
+                // ------------------------------------------------------------
                 // stage 3: fill the child node
                 child           = ftNodeNew();
                 child->parent   = parent;
@@ -183,6 +186,7 @@ listFiles(struct arr *stack, const struct ft_walk_config *cfg)
 
                 vecPushBack(&parent->children, child);
 
+                // ------------------------------------------------------------
                 // stage 4: handle symb link
                 unsigned int dtype = dp->d_type;
                 if (dtype == DT_LNK) {
@@ -219,15 +223,16 @@ listFiles(struct arr *stack, const struct ft_walk_config *cfg)
                         if (dtype == DT_LNK) continue;
                 }
 
-                // stage 6: handle dir vs file
+                // ------------------------------------------------------------
+                // stage 5: handle dir vs file
                 switch (dtype) {
                 case DT_DIR:
-                        logDebug("entry [d]: %s", d_name);
+                        logTrace("entry [d]: %s", d_name);
                         child->is_dir = 1;
                         STACK_PUSH(stack, child);
                         break;
                 case DT_REG:
-                        logDebug("entry [f]: %s", d_name);
+                        logTrace("entry [f]: %s", d_name);
                         break;
                 default:
                         err = errNew("unsupported filetype: %d", dp->d_type);
