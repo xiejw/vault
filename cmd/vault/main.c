@@ -23,12 +23,20 @@ static void ftNodeFree(struct ft_node *);
 void ftFree(struct ft_node *root);
 void ftDump(int fd, struct ft_node *root);
 
-static error_t listFiles(struct arr *);
-
 #define STACK_PUSH(stk, ele) *(__typeof__(ele) *)arrPush((stk)) = (ele)
 // #define STACK_POP(stk, type) (*(type *)arrPop((stk)))
 #define STACK_POP_AND_ASSIGN(stk, ele) \
         (ele) = (*(__typeof__(ele) *)arrPop((stk)))
+
+struct ft_walk_config {
+        // values:
+        //   - 0 error out (default)
+        //   - 1 warning
+        //   - 2 do nothing
+        int dangling_sym_link;
+};
+
+static error_t listFiles(struct arr *, const struct ft_walk_config *);
 
 int
 main()
@@ -46,7 +54,11 @@ main()
 
         // *(struct ft_node **)(arrPush(stack)) = root;
 
-        err = listFiles(stack);
+        struct ft_walk_config cfg = {
+            .dangling_sym_link = 1,
+        };
+
+        err = listFiles(stack, &cfg);
         if (err) {
                 logFatal("fatal error");
                 errDump("failed to list files.");
@@ -80,7 +92,7 @@ main()
 // TODO join path
 
 error_t
-listFiles(struct arr *stack)
+listFiles(struct arr *stack, const struct ft_walk_config *cfg)
 {
         error_t err;
         struct dirent *dp;
@@ -111,8 +123,6 @@ listFiles(struct arr *stack)
                         continue;  // skip . and ..
 
                 // stage 3: handling
-                logInfo("entry: %s", dp->d_name);
-
                 child           = ftNodeNew();
                 child->parent   = parent;
                 child->root_dir = parent->root_dir;    // alias
@@ -122,15 +132,15 @@ listFiles(struct arr *stack)
                 // stage 4: type
                 switch (dp->d_type) {
                 case DT_DIR:
-                        logInfo("  -> is dir");
-
+                        logDebug("entry [d]: %s", dp->d_name);
                         STACK_PUSH(stack, child);
                         break;
                 case DT_REG:
-                        logInfo("  -> is reg file");
+                        logDebug("entry [f]: %s", dp->d_name);
                         break;
                 case DT_LNK:
-                        logInfo("  -> is symbolic link");
+                        logDebug("entry [l]: %s", dp->d_name);
+
                         // We don't know whether this is a dir or file. Put it
                         // into the stack so next round we will understand it.
                         STACK_PUSH(stack, child);
