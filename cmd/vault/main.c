@@ -7,6 +7,7 @@
 // eva
 #include <adt/sds.h>
 #include <adt/vec.h>
+#include <base/fpath.h>
 #include <base/log.h>
 #include <base/mm.h>
 #include <base/types.h>
@@ -14,7 +15,7 @@
 struct ft_node {
         struct ft_node *parent;  // unowned. if NULL, this is root.
         sds_t root_dir;          // owned by root; alias for non-root.
-        sds_t path;              // owned by non-root. exclude the root_dir.
+        sds_t path;              // owned. exclude the root_dir. "" for root.
         vec_t(struct ft_node *) children;  // owned. if NULL, this must be file.
 };
 
@@ -49,6 +50,7 @@ main()
 
         struct ft_node *root = ftNodeNew();
         root->root_dir       = sdsNew("tests/a");
+        root->path           = sdsEmptyWithCap(0);  // never grow
 
         STACK_PUSH(stack, root);
 
@@ -109,6 +111,9 @@ listFiles(struct arr *stack, const struct ft_walk_config *cfg)
 
         err = OK;
         struct ft_node *child;
+        sds_t parent_path      = parent->path;
+        size_t parent_path_len = sdsLen(parent_path);
+
         for (;;) {
                 // stage 1. read entry from dirp.
                 errno = 0;              // to distingush err from end-of-dir.
@@ -116,30 +121,30 @@ listFiles(struct arr *stack, const struct ft_walk_config *cfg)
                 if (dp == NULL) break;  // either error or end-of-dir
 
                 // stage 2: clean up
-                //
-                // TODO: skip hidden file as well.
-                if (strcmp(dp->d_name, ".") == 0 ||
-                    strcmp(dp->d_name, "..") == 0)
-                        continue;  // skip . and ..
+                // skip hidden file, "." and "..".
+                const char *d_name = dp->d_name;
+                assert(dp->d_name[0] != 0);
+                if (d_name[0] == '.') continue;
 
                 // stage 3: handling
                 child           = ftNodeNew();
                 child->parent   = parent;
-                child->root_dir = parent->root_dir;    // alias
-                child->path     = sdsNew(dp->d_name);  // TODO should join
+                child->root_dir = parent->root_dir;  // alias
+                child->path     = fpJoin(parent_path, parent_path_len, d_name,
+                                         strlen(d_name));
                 vecPushBack(&parent->children, child);
 
                 // stage 4: type
                 switch (dp->d_type) {
                 case DT_DIR:
-                        logDebug("entry [d]: %s", dp->d_name);
+                        logDebug("entry [d]: %s", d_name);
                         STACK_PUSH(stack, child);
                         break;
                 case DT_REG:
-                        logDebug("entry [f]: %s", dp->d_name);
+                        logDebug("entry [f]: %s", d_name);
                         break;
                 case DT_LNK:
-                        logDebug("entry [l]: %s", dp->d_name);
+                        logDebug("entry [l]: %s", d_name);
 
                         // We don't know whether this is a dir or file. Put it
                         // into the stack so next round we will understand it.
@@ -158,12 +163,14 @@ exit:
         return err;
 }
 
+// create a new node with zeros filled in all fields.
 struct ft_node *
 ftNodeNew(void)
 {
         return calloc(1, sizeof(struct ft_node));
 }
 
+// free a single node (will not touch the children it owns).
 void
 ftNodeFree(struct ft_node *p)
 {
@@ -171,15 +178,15 @@ ftNodeFree(struct ft_node *p)
 
         if (is_root) {
                 sdsFree(p->root_dir);
-        } else {
-                sdsFree(p->path);
         }
-
+        sdsFree(p->path);
         vecFree(p->children);  // ftFree will free all children.
         free(p);
 }
 
 // helper
+//
+// free the subtree at 'node', where 'node' can be a leaf.
 static void
 ftSubTreeFree(struct ft_node *node)
 {
@@ -194,6 +201,7 @@ ftSubTreeFree(struct ft_node *node)
         ftNodeFree(node);
 }
 
+// free the entire tree rooted at 'root'
 void
 ftFree(struct ft_node *root)
 {
@@ -201,6 +209,7 @@ ftFree(struct ft_node *root)
         ftSubTreeFree(root);
 }
 
+// dump the tree representation to fd (say stdout).
 void
 ftDump(int fd, struct ft_node *root)
 {
