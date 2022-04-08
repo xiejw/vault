@@ -11,19 +11,18 @@
 #include <base/mm.h>
 #include <base/types.h>
 
-static void ftNodeFree(struct ft_node *);
-static struct ft_node *ftNodeNew(void);
-static error_t listFiles(struct arr *, const struct ft_walk_config *);
+// -----------------------------------------------------------------------------
+// helper prototypes
+// -----------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-// stack macros
-//
-// considere to moved to eva.
-//------------------------------------------------------------------------------
-#define STACK_PUSH(stk, ele) *(__typeof__(ele) *)arrPush((stk)) = (ele)
-// #define STACK_POP(stk, type) (*(type *)arrPop((stk)))
-#define STACK_POP_AND_ASSIGN(stk, ele) \
-        (ele) = (*(__typeof__(ele) *)arrPop((stk)))
+// create a new node with zeros filled in all fields.
+static struct ft_node *ftNodeNew(void);
+// free a single node (will not touch the children it owns).
+static void ftNodeFree(struct ft_node *);
+// free the subtree at 'node', where 'node' can be a leaf.
+static void ftSubTreeFree(struct ft_node *node);
+
+static void ftDumpImpl(int fd, struct ft_node *node, sds_t space);
 
 // check whether the symbolic link embeded in 'node' is a dir.
 //
@@ -35,7 +34,76 @@ static error_t listFiles(struct arr *, const struct ft_walk_config *);
 //         - 0 is file
 //         - 1 is dir
 //         - 2 should skip this node.
-static error_t
+static error_t checkSymLinkType(int dangling_sym_link, struct ft_node *node,
+                                _out_ int *output_flag);
+static error_t listFiles(struct arr *, const struct ft_walk_config *);
+// -----------------------------------------------------------------------------
+// stack macros
+//
+// considere to moved to eva.
+// -----------------------------------------------------------------------------
+
+#define STACK_PUSH(stk, ele) *(__typeof__(ele) *)arrPush((stk)) = (ele)
+// #define STACK_POP(stk, type) (*(type *)arrPop((stk)))
+#define STACK_POP_AND_ASSIGN(stk, ele) \
+        (ele) = (*(__typeof__(ele) *)arrPop((stk)))
+
+// -----------------------------------------------------------------------------
+// public apis impl
+// -----------------------------------------------------------------------------
+
+error_t
+ftWalk(struct ft_node *root, const struct ft_walk_config *cfg)
+{
+        error_t err       = OK;
+        struct arr *stack = arrNewStack(sizeof(struct ft_node *), 128, 1024);
+        STACK_PUSH(stack, root);
+
+        // TODO check root is truelly a dir.
+        while (!arrIsEmpty(stack)) {
+                err = listFiles(stack, cfg);
+                if (err) break;
+        }
+        arrFree(stack);
+        return err;
+}
+
+struct ft_node *
+ftRootNew(sds_t root_dir)
+{
+        struct ft_node *root = ftNodeNew();
+        root->root_dir       = root_dir;
+        root->path           = sdsEmptyWithCap(0);  // never grow
+        root->is_dir         = 1;
+
+        // TODO (check is a dir)
+        return root;
+}
+
+// free the entire tree rooted at 'root'
+void
+ftFree(struct ft_node *root)
+{
+        assert(root->parent == NULL);
+        ftSubTreeFree(root);
+}
+
+// dump the tree representation to fd (say stdout).
+void
+ftDump(int fd, struct ft_node *root)
+{
+        sds_t space = sdsEmpty();
+        dprintf(fd, "%sroot - %s\n", space, root->root_dir);
+
+        ftDumpImpl(fd, root, space);
+        sdsFree(space);
+}
+
+// -----------------------------------------------------------------------------
+// helper impl
+// -----------------------------------------------------------------------------
+
+error_t
 checkSymLinkType(int dangling_sym_link, struct ft_node *node,
                  _out_ int *output_flag)
 {
@@ -72,22 +140,6 @@ checkSymLinkType(int dangling_sym_link, struct ft_node *node,
 out:
         *output_flag = 2;  // should skip
         return OK;
-}
-
-error_t
-walkTree(struct ft_node *root, const struct ft_walk_config *cfg)
-{
-        error_t err       = OK;
-        struct arr *stack = arrNewStack(sizeof(struct ft_node *), 128, 1024);
-        STACK_PUSH(stack, root);
-
-        // TODO check root is truelly a dir.
-        while (!arrIsEmpty(stack)) {
-                err = listFiles(stack, cfg);
-                if (err) break;
-        }
-        arrFree(stack);
-        return err;
 }
 
 error_t
@@ -194,26 +246,12 @@ exit:
         return err;
 }
 
-// create a new node with zeros filled in all fields.
 struct ft_node *
 ftNodeNew(void)
 {
         return calloc(1, sizeof(struct ft_node));
 }
 
-struct ft_node *
-ftRootNew(sds_t root_dir)
-{
-        struct ft_node *root = ftNodeNew();
-        root->root_dir       = root_dir;
-        root->path           = sdsEmptyWithCap(0);  // never grow
-        root->is_dir         = 1;
-
-        // TODO (check is a dir)
-        return root;
-}
-
-// free a single node (will not touch the children it owns).
 void
 ftNodeFree(struct ft_node *p)
 {
@@ -227,9 +265,6 @@ ftNodeFree(struct ft_node *p)
         free(p);
 }
 
-// helper
-//
-// free the subtree at 'node', where 'node' can be a leaf.
 static void
 ftSubTreeFree(struct ft_node *node)
 {
@@ -242,14 +277,6 @@ ftSubTreeFree(struct ft_node *node)
         }
 
         ftNodeFree(node);
-}
-
-// free the entire tree rooted at 'root'
-void
-ftFree(struct ft_node *root)
-{
-        assert(root->parent == NULL);
-        ftSubTreeFree(root);
 }
 
 static void
@@ -274,15 +301,4 @@ ftDumpImpl(int fd, struct ft_node *node, sds_t space)
         size_t len = sdsLen(space);
         sdsSetLen(space, len - 4);
         space[len - 4] = 0;
-}
-
-// dump the tree representation to fd (say stdout).
-void
-ftDump(int fd, struct ft_node *root)
-{
-        sds_t space = sdsEmpty();
-        dprintf(fd, "%sroot - %s\n", space, root->root_dir);
-
-        ftDumpImpl(fd, root, space);
-        sdsFree(space);
 }

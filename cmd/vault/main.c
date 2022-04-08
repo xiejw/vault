@@ -18,10 +18,10 @@ main()
             .dangling_sym_link = FT_WARNING,
         };
 
-        err = walkTree(root, &cfg);
+        err = ftWalk(root, &cfg);
         if (err) {
                 logFatal("fatal error");
-                errDump("failed to list files.");
+                errDump("failed to walk the tree at %s", root->root_dir);
         }
 
         ftDump(1, root);
