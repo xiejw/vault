@@ -1,2 +1,16 @@
 impl quicksort.
 impl checksum for even folder.
+
+visit pattern
+    ftVisit(visitFn, pre/post_order, void* data)
+    typdef error_t (*visitFn) (void* data, struct ft_node*, int* oflag)
+
+    oflag OR based:
+      VF_NONE no change
+      if_DEATCH: parent is responsbie for deatch this node and maintain the
+          sorting order (how to make this efficiency ; copy on write)
+
+removeEmptyDir  post order / dettach
+printTree       pre order  / none
+shasum          post order / none
+sotring         port order / none
