@@ -1,7 +1,9 @@
+# vim: shiftwidth=4
+
 impl quicksort.
 impl checksum for even folder.
 
-visit pattern
+visitor pattern
     ftVisit(visitFn, pre/post_order, void* data)
     typdef error_t (*visitFn) (void* data, struct ft_node*, int* oflag)
 
@@ -10,7 +12,13 @@ visit pattern
       if_DEATCH: parent is responsbie for deatch this node and maintain the
           sorting order (how to make this efficiency ; copy on write)
 
-removeEmptyDir  post order / dettach
-printTree       pre order  / none
-shasum          post order / none
-sotring         port order / none
+functionality to be impl'ed on the visitor pattern
+    removeEmptyDir  post order / dettach
+    printTree       pre order  / none
+    shasum          post order / none
+    sotring         port order / none
+
+algo: how to diff two trees
+    sorted each sub-tree.
+    for each sub-tree, if the shasum is same, it is considered to be identical.
+    otherwise, use bisect to find the next item same.
