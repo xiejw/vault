@@ -8,9 +8,9 @@ visitor pattern
     typdef error_t (*visitFn) (void* data, struct ft_node*, int* oflag)
 
     oflag OR based:
-      VF_NONE no change
-      if_DEATCH: parent is responsbie for deatch this node and maintain the
-          sorting order (how to make this efficiency ; copy on write)
+        VF_NONE no change
+        if_DEATCH: parent is responsbie for deatch this node and maintain the
+            sorting order (how to make this efficiency ; copy on write)
 
 functionality to be impl'ed on the visitor pattern
     removeEmptyDir  post order / dettach
@@ -19,6 +19,9 @@ functionality to be impl'ed on the visitor pattern
     sotring         port order / none
 
 algo: how to diff two trees
-    sorted each sub-tree.
-    for each sub-tree, if the shasum is same, it is considered to be identical.
-    otherwise, use bisect to find the next item same.
+    assumption: each sub-tree is well sorted..
+
+    steps:
+        - for each sub item, if the shasum is same, it is considered to be
+          identical.
+        - otherwise, use bisect to find the next item same.
