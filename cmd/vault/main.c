@@ -13,7 +13,8 @@ main()
 {
         error_t err;
 
-        struct ft_node *root      = ftRootNew(sdsNew("tests/a"));
+        struct ft_node *root      = ftRootNew(sdsNew("tests/test_tree/a"));
+
         struct ft_walk_config cfg = {
             .dangling_sym_link = FT_WARNING,
         };
