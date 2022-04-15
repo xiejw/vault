@@ -39,6 +39,9 @@ compile: ${BUILD} ${ALL_LIBS}
 ${BUILD}/%.o: ${SRC}/%.c
 	${EVA_CC} -o $@ -c $<
 
+${BUILD}/integration_test.o: ${CMD}/test/integration_test.c
+	${EVA_CC} -o $@ -c $<
+
 # ------------------------------------------------------------------------------
 # cmds
 # ------------------------------------------------------------------------------
@@ -53,7 +56,7 @@ $(eval $(call objs,vault,  $(BUILD), ${ALL_LIBS}))
 # ------------------------------------------------------------------------------
 # tests
 # ------------------------------------------------------------------------------
-TEST_LIBS       =
+TEST_LIBS       = ${BUILD}/integration_test.o
 
-$(eval $(call objs,test,$(BUILD),$(VM_LIB) $(OBJ_LIB) $(TEST_LIBS)))
+$(eval $(call objs,test,$(BUILD),$(ALL_LIBS) $(TEST_LIBS)))
 
