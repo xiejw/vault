@@ -66,23 +66,28 @@ error_t
 checkSymLinkType(int dangling_sym_link, struct ft_node *node,
                  _out_ int *output_flag)
 {
+        error_t err = OK;
+
         struct stat statbuf;
         sds_t fs_path = fpJoinSds(node->root_dir, node->path);
         logTrace("checking symbolic path: %s", fs_path);
 
         if (stat(fs_path, &statbuf) == 0) {
                 *output_flag = S_ISDIR(statbuf.st_mode);
-                return OK;
+                goto exit;
         }
 
         // now handling error cases.
-        if (errno != ENOENT)
-                return errNew("failed to stat the symbolic link: %s",
-                              strerror(errno));
+        if (errno != ENOENT) {
+                err = errNew("failed to stat the symbolic link: %s",
+                             strerror(errno));
+                goto exit;
+        }
 
         // this is a dangling link
         if (dangling_sym_link == FT_ERROR_OUT) {
-                return errNew("sym link does not exist: %s", fs_path);
+                err = errNew("sym link does not exist: %s", fs_path);
+                goto exit;
         }
 
         if (dangling_sym_link == FT_WARNING) {
@@ -98,7 +103,10 @@ checkSymLinkType(int dangling_sym_link, struct ft_node *node,
 
 out:
         *output_flag = 2;  // should skip
-        return OK;
+
+exit:
+        sdsFree(fs_path);
+        return err;
 }
 
 error_t
@@ -112,8 +120,8 @@ listFiles(struct arr *stack, const struct ft_walk_config *cfg)
         const sds_t parent_path      = parent->path;  // alias
         const size_t parent_path_len = sdsLen(parent_path);
 
-        const char *dirpath = fpJoinSds(parent->root_dir, parent_path);
-        DIR *dirp           = opendir(dirpath);
+        sds_t dirpath = fpJoinSds(parent->root_dir, parent_path);
+        DIR *dirp     = opendir(dirpath);
         if (dirp == NULL) return errNew("failed to open dir: %s", dirpath);
 
         logTrace("readdir: %s", dirpath);
@@ -198,6 +206,7 @@ listFiles(struct arr *stack, const struct ft_walk_config *cfg)
         }
 
 exit:
+        sdsFree(dirpath);
         closedir(dirp);
         if (errno != 0)
                 return errNew("failed to read dir: %s", strerror(errno));
