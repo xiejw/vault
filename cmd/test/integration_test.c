@@ -20,6 +20,11 @@ test_walk_tree()
         err = ftWalk(root, &cfg);
         ASSERT_TRUE("no err", err == OK);
 
+        ASSERT_TRUE("root dir",
+                    strcmp(root->root_dir, "tests/test_tree/a") == 0);
+        ASSERT_TRUE("root path", strcmp(root->path, "") == 0);
+        ASSERT_TRUE("root is_dir", root->is_dir == 1);
+
         ftFree(root);
         return NULL;
 }
