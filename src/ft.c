@@ -52,7 +52,7 @@ ftNodeNew(void)
 }
 
 void
-ftNodeFree(struct ft_node *p)
+ftNodeFreeShallow(struct ft_node *p)
 {
         const int is_root = p->parent == NULL;
 
@@ -60,7 +60,7 @@ ftNodeFree(struct ft_node *p)
                 sdsFree(p->root_dir);
         }
         sdsFree(p->path);
-        vecFree(p->children);  // ftFree will free all children.
+        vecFree(p->children);  // shallow free
         free(p);
 }
 
@@ -79,7 +79,7 @@ ftSubTreeFree(struct ft_node *node)
                 ftSubTreeFree(children[i]);
         }
 
-        ftNodeFree(node);
+        ftNodeFreeShallow(node);
 }
 
 static void
