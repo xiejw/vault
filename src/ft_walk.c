@@ -178,7 +178,7 @@ listFiles(struct arr *stack, const struct ft_walk_config *cfg)
                                 // - leave dtype as link to skip the handle in
                                 // next stage
                                 child = vecPopBack(parent->children);
-                                ftNodeFree(child);
+                                ftNodeFreeShallow(child);
                                 break;
                         default:
                                 errPanic("should not reach not");

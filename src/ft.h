@@ -34,6 +34,6 @@ extern void ftNodeFreeShallow(struct ft_node *);
 // visitor pattern
 // -----------------------------------------------------------------------------
 
-typedef error_t (*ft_visit_fn_t)(void *data) :
+typedef error_t (*ft_visit_fn_t)(void *data);
 
 #endif  // FS_H_
