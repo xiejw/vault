@@ -85,12 +85,12 @@ checkSymLinkType(int dangling_sym_link, struct ft_node *node,
         }
 
         // this is a dangling link
-        if (dangling_sym_link == FT_ERROR_OUT) {
+        if (dangling_sym_link == FTW_ERROR_OUT) {
                 err = errNew("sym link does not exist: %s", fs_path);
                 goto exit;
         }
 
-        if (dangling_sym_link == FT_WARNING) {
+        if (dangling_sym_link == FTW_WARNING) {
                 logWarn(
                     "sym link does not exist (but process will "
                     "continue): %s",
@@ -98,7 +98,7 @@ checkSymLinkType(int dangling_sym_link, struct ft_node *node,
                 goto out;
         }
 
-        assert(dangling_sym_link == FT_SILENT);
+        assert(dangling_sym_link == FTW_SILENT);
         logDebug("sym link does not exist: %s", fs_path);
 
 out:

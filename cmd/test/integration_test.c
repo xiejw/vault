@@ -24,7 +24,7 @@ test_walk_tree()
         struct ft_node *root = ftRootNew(sdsNew("tests/test_tree/a"));
 
         struct ft_walk_config cfg = {
-            .dangling_sym_link = FT_SILENT,  // for testing, we ignore it.
+            .dangling_sym_link = FTW_SILENT,  // for testing, we ignore it.
         };
 
         // walk and expect no issue.

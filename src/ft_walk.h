@@ -7,9 +7,9 @@
 //------------------------------------------------------------------------------
 // walk data structure
 //------------------------------------------------------------------------------
-#define FT_ERROR_OUT 0
-#define FT_WARNING   1
-#define FT_SILENT    2
+#define FTW_ERROR_OUT 0
+#define FTW_WARNING   1
+#define FTW_SILENT    2
 
 struct ft_walk_config {
         int dangling_sym_link;  // see FT_XXX above
