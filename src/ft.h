@@ -25,24 +25,7 @@ extern void ftFree(struct ft_node *root);  // free the entire tree
 // -----------------------------------------------------------------------------
 extern void ftDump(int fd, struct ft_node *root);
 
-// create a new node with zeros filled in all fields
-extern struct ft_node *ftNodeNew(void);
-// free a single node (will not free the child nodes it owns)
-extern void ftNodeFreeShallow(struct ft_node *);
-
-// -----------------------------------------------------------------------------
-// visitor pattern
-// -----------------------------------------------------------------------------
-
-#define FTV_NO_CHANGE 0  // no change to the tree
-#define FTV_DETACH    1  // ftVisit will detach the current node (order undefined)
-
-// outflag is the OR based FTV_xxx values
-typedef error_t (*ft_visit_fn_t)(void *data, struct ft_node *,
-                                 _out_ int *outflag);
-
-// arg:
-//   order: 0 pre-order 1 post order
-error_t ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root, int order);
+extern struct ft_node *ftNodeNew(void);           // new node with all zeros
+extern void ftNodeFreeShallow(struct ft_node *);  // shallow free
 
 #endif  // FS_H_
