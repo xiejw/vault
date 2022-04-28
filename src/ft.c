@@ -1,15 +1,11 @@
 #include "ft.h"
 
-#include <stdio.h>  // dprintf
-
 // -----------------------------------------------------------------------------
 // helper prototypes
 // -----------------------------------------------------------------------------
 
 // free the subtree at 'node', where 'node' can be a leaf.
 static void ftSubTreeFree(struct ft_node *node);
-
-static void ftDumpImpl(int fd, struct ft_node *node, _mut_ sds_t *space);
 
 // -----------------------------------------------------------------------------
 // public apis impl
@@ -32,17 +28,6 @@ ftFree(struct ft_node *root)
 {
         assert(root->parent == NULL);
         ftSubTreeFree(root);
-}
-
-// dump the tree representation to fd (say stdout).
-void
-ftDump(int fd, struct ft_node *root)
-{
-        sds_t space = sdsEmpty();
-        dprintf(fd, "%sroot - %s\n", space, root->root_dir);
-
-        ftDumpImpl(fd, root, &space);
-        sdsFree(space);
 }
 
 struct ft_node *
@@ -80,28 +65,4 @@ ftSubTreeFree(struct ft_node *node)
         }
 
         ftNodeFreeShallow(node);
-}
-
-static void
-ftDumpImpl(int fd, struct ft_node *node, sds_t *space)
-{
-        int is_dir;
-        // append 4 spaces.
-        sdsCatPrintf(space, "    ");
-
-        for (size_t i = 0; i < vecSize(node->children); i++) {
-                struct ft_node *child = node->children[i];
-                is_dir                = child->is_dir;
-                dprintf(fd, "%s+-> %s%s\n", *space, child->path,
-                        is_dir ? " (+)" : "");
-
-                if (is_dir) {
-                        ftDumpImpl(fd, child, space);
-                }
-        }
-
-        // remove 4 spaces
-        size_t len = sdsLen(*space);
-        sdsSetLen(*space, len - 4);
-        (*space)[len - 4] = 0;
 }

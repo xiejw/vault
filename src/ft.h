@@ -23,7 +23,6 @@ extern void ftFree(struct ft_node *root);  // free the entire tree
 // -----------------------------------------------------------------------------
 // low level primitives
 // -----------------------------------------------------------------------------
-extern void ftDump(int fd, struct ft_node *root);
 
 extern struct ft_node *ftNodeNew(void);           // new node with all zeros
 extern void ftNodeFreeShallow(struct ft_node *);  // shallow free

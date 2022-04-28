@@ -24,4 +24,9 @@ typedef error_t (*ft_visit_fn_t)(void *data, struct ft_node *,
 //     intflag: OR based FTV_xxx input signals above
 error_t ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root, int inflag);
 
+// -----------------------------------------------------------------------------
+// supporting fns
+// -----------------------------------------------------------------------------
+extern void ftDump(int fd, struct ft_node *root);
+
 #endif  // FS_VISIT_H

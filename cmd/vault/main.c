@@ -6,6 +6,7 @@
 #include <base/types.h>
 
 // vault
+#include "ft_visit.h"
 #include "ft_walk.h"
 
 int
