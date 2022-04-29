@@ -57,7 +57,7 @@ $(eval $(call objs,vault,  $(BUILD), ${ALL_LIBS}))
 # ------------------------------------------------------------------------------
 # tests
 # ------------------------------------------------------------------------------
-TEST_LIBS       = ${BUILD}/integration_test.o
+TEST_LIBS       = ${BUILD}/integration_test.o ${BUILD}/ft_diff_test.o
 
 $(eval $(call objs,test,$(BUILD),$(ALL_LIBS) $(TEST_LIBS)))
 

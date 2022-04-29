@@ -35,6 +35,8 @@ main()
         // Convenstion is for foo, a test suite fn run_foo_suite is called. For
         // customized case, use ADD_SUITE_NAME_AND_FN.
 
+        ADD_SUITE(diff);  // src/ft_diff_test.c
+
         // integration
 
         ADD_SUITE(integration);  // cmd/test/integration_test.c
