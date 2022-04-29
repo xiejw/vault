@@ -15,6 +15,7 @@ struct ft_node {
         sds_t path;              // owned. exclude the root_dir. "" for root.
         vec_t(struct ft_node *) children;  // owned.
         int is_dir;                        // value range: {0, 1}
+        sds_t checksum;                    // owned. Nullable
 };
 
 extern struct ft_node *ftRootNew(_moved_in_ sds_t root_dir);

@@ -46,6 +46,7 @@ ftNodeFreeShallow(struct ft_node *p)
         }
         sdsFree(p->path);
         vecFree(p->children);  // shallow free
+        if (p->checksum != NULL) sdsFree(p->checksum);
         free(p);
 }
 
