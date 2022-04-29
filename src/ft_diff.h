@@ -11,7 +11,7 @@
 // public apis
 // -----------------------------------------------------------------------------
 extern error_t ftDiff(const struct ft_node *l, const struct ft_node *r,
-                      _mut_ vec_t(struct ft_node *) only_in_l,
-                      _mut_ vec_t(struct ft_node *) only_in_r);
+                      _mut_ vec_t(struct ft_node *) * only_in_l,
+                      _mut_ vec_t(struct ft_node *) * only_in_r);
 
 #endif  // FS_DIFF_H
