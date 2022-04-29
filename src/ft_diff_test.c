@@ -56,7 +56,7 @@ test_empty_roots()
         return NULL;
 }
 
-DECLARE_TEST_SUITE(diff)
+DECLARE_TEST_SUITE(ft_diff)
 {
         RUN_TEST(test_empty_roots);
         return NULL;
