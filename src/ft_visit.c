@@ -36,7 +36,8 @@ ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root, int inflag)
 
 #define HANDLE_ROOT()                                                      \
         do {                                                               \
-                err = fn(data, root, &outflag);                            \
+                outflag = FTV_NO_CHANGE;                                   \
+                err     = fn(data, root, &outflag);                        \
                 if (err) goto exit;                                        \
                                                                            \
                 assert(outflag == FTV_DETACH || outflag == FTV_NO_CHANGE); \
@@ -78,7 +79,8 @@ ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder)
 
 #define HANDLE_NODE(p, c)                                                  \
         do {                                                               \
-                err = fn(data, (c), &outflag);                             \
+                outflag = FTV_NO_CHANGE;                                   \
+                err     = fn(data, (c), &outflag);                         \
                 if (err) goto exit;                                        \
                                                                            \
                 assert(outflag == FTV_DETACH || outflag == FTV_NO_CHANGE); \
