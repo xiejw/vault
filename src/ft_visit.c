@@ -86,7 +86,7 @@ ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder)
                 assert(outflag == FTV_DETACH || outflag == FTV_NO_CHANGE); \
                                                                            \
                 if (outflag == FTV_DETACH) {                               \
-                        ftFree((c));                                       \
+                        ftSubTreeFree((c));                                \
                                                                            \
                         /* swap the element with final one. */             \
                         size_t s         = vecSize((p)->children);         \

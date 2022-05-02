@@ -13,7 +13,7 @@ buildTree()
         // root ->
         //     a (+)
         //     b
-        sds_t root_dir = sdsNew("/root");
+        sds_t root_dir = sdsNew("/root/");
 
         struct ft_node *root = ftNodeNew();
         root->root_dir       = root_dir;
@@ -23,7 +23,7 @@ buildTree()
         struct ft_node *node_dir = ftNodeNew();
         node_dir->parent         = root;
         node_dir->root_dir       = root_dir;
-        node_dir->path           = sdsNew("a");
+        node_dir->path           = sdsNew("a/");
         node_dir->is_dir         = 1;
 
         struct ft_node *node_file = ftNodeNew();
@@ -46,6 +46,13 @@ print_tree_fn(void *data, struct ft_node *node, _out_ int *outflag)
         sdsCatPrintf(s, "%s\n", path);
         sdsFree(path);
         *outflag = FTV_NO_CHANGE;
+        return OK;
+}
+
+static error_t
+detach_all_fn(void *data, struct ft_node *node, _out_ int *outflag)
+{
+        *outflag = FTV_DETACH;
         return OK;
 }
 
@@ -87,9 +94,31 @@ test_print_tree_postorder()
         return NULL;
 }
 
+static char *
+test_detach_preorder()
+{
+        error_t err;
+        struct ft_node *root = buildTree();
+        err                  = ftVisit(detach_all_fn, NULL, root, FTV_PREORDER);
+        ASSERT_TRUE("no err", err == OK);
+        return NULL;
+}
+
+static char *
+test_detach_postorder()
+{
+        error_t err;
+        struct ft_node *root = buildTree();
+        err = ftVisit(detach_all_fn, NULL, root, FTV_POSTORDER);
+        ASSERT_TRUE("no err", err == OK);
+        return NULL;
+}
+
 DECLARE_TEST_SUITE(ft_visit)
 {
         RUN_TEST(test_print_tree_preorder);
         RUN_TEST(test_print_tree_postorder);
+        RUN_TEST(test_detach_preorder);
+        RUN_TEST(test_detach_postorder);
         return NULL;
 }

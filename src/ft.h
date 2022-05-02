@@ -27,5 +27,6 @@ extern void ftFree(struct ft_node *root);  // free the entire tree
 
 extern struct ft_node *ftNodeNew(void);           // new node with all zeros
 extern void ftNodeFreeShallow(struct ft_node *);  // shallow free
+extern void ftSubTreeFree(struct ft_node *node);  // free a subtree
 
 #endif  // FS_H_
