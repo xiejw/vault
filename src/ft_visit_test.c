@@ -50,7 +50,7 @@ print_tree_fn(void *data, struct ft_node *node, _out_ int *outflag)
 }
 
 static char *
-test_print_tree()
+test_print_tree_preorder()
 {
         error_t err;
         struct ft_node *root = buildTree();
@@ -68,8 +68,28 @@ test_print_tree()
         return NULL;
 }
 
+static char *
+test_print_tree_postorder()
+{
+        error_t err;
+        struct ft_node *root = buildTree();
+
+        sds_t s = sdsEmpty();
+        err     = ftVisit(print_tree_fn, &s, root, FTV_POSTORDER);
+
+        const char *expected = "/root/a\n/root/b\n/root\n";
+
+        ASSERT_TRUE("no err", err == OK);
+        ASSERT_TRUE("output", strcmp(expected, s) == 0);
+
+        sdsFree(s);
+        ftFree(root);
+        return NULL;
+}
+
 DECLARE_TEST_SUITE(ft_visit)
 {
-        RUN_TEST(test_print_tree);
+        RUN_TEST(test_print_tree_preorder);
+        RUN_TEST(test_print_tree_postorder);
         return NULL;
 }
