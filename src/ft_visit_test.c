@@ -21,14 +21,16 @@ buildTree()
         root->is_dir         = 1;
 
         struct ft_node *node_dir = ftNodeNew();
-        root->root_dir           = root_dir;
-        root->path               = sdsNew("a");
-        root->is_dir             = 1;
+        node_dir->parent         = root;
+        node_dir->root_dir       = root_dir;
+        node_dir->path           = sdsNew("a");
+        node_dir->is_dir         = 1;
 
         struct ft_node *node_file = ftNodeNew();
-        root->root_dir            = root_dir;
-        root->path                = sdsNew("b");
-        root->is_dir              = 0;
+        node_file->parent         = root;
+        node_file->root_dir       = root_dir;
+        node_file->path           = sdsNew("b");
+        node_file->is_dir         = 0;
 
         vecPushBack(&root->children, node_dir);
         vecPushBack(&root->children, node_file);
@@ -54,12 +56,12 @@ test_print_tree()
         struct ft_node *root = buildTree();
 
         sds_t s = sdsEmpty();
+        err     = ftVisit(print_tree_fn, &s, root, FTV_PREORDER);
 
-        err = ftVisit(print_tree_fn, &s, root, FTV_PREORDER);
+        const char *expected = "/root\n/root/a\n/root/b\n";
 
         ASSERT_TRUE("no err", err == OK);
-
-        printf("output:\n%s", s);
+        ASSERT_TRUE("output", strcmp(expected, s) == 0);
 
         sdsFree(s);
         ftFree(root);
