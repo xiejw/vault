@@ -33,20 +33,20 @@ ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root, int inflag)
         int postorder = (inflag & FTV_POSTORDER);
 
         error_t err = OK;
-        int outflag;
+        int flag;
 
-#define HANDLE_ROOT(of)                                                    \
-        do {                                                               \
-                outflag = (of);                                            \
-                err     = fn(data, root, &outflag);                        \
-                if (err) goto exit;                                        \
-                                                                           \
-                assert(outflag == FTV_DETACH || outflag == FTV_NO_CHANGE); \
-                                                                           \
-                if (outflag == FTV_DETACH) {                               \
-                        ftFree(root);                                      \
-                        goto exit;                                         \
-                }                                                          \
+#define HANDLE_ROOT(of)                                              \
+        do {                                                         \
+                flag = (of);                                         \
+                err  = fn(data, root, &flag);                        \
+                if (err) goto exit;                                  \
+                                                                     \
+                assert(flag == FTV_DETACH || flag == FTV_NO_CHANGE); \
+                                                                     \
+                if (flag == FTV_DETACH) {                            \
+                        ftFree(root);                                \
+                        goto exit;                                   \
+                }                                                    \
         } while (0)
 
         // special case for root node only.
@@ -75,29 +75,29 @@ ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder,
             int postorder)
 {
         error_t err = OK;
-        int outflag;
+        int flag;
 
         // loop each child and take child action at parent level.
         for (size_t i = 0; i < vecSize(node->children);) {
                 struct ft_node *child = node->children[i];
 
-#define HANDLE_NODE(p, c, of)                                              \
-        do {                                                               \
-                outflag = (of);                                            \
-                err     = fn(data, (c), &outflag);                         \
-                if (err) goto exit;                                        \
-                                                                           \
-                assert(outflag == FTV_DETACH || outflag == FTV_NO_CHANGE); \
-                                                                           \
-                if (outflag == FTV_DETACH) {                               \
-                        ftSubTreeFree((c));                                \
-                                                                           \
-                        /* swap the element with final one. */             \
-                        size_t s         = vecSize((p)->children);         \
-                        (p)->children[i] = (p)->children[s - 1];           \
-                        vecSetSize((p)->children, s - 1);                  \
-                        continue; /* without advancing i */                \
-                }                                                          \
+#define HANDLE_NODE(p, c, of)                                        \
+        do {                                                         \
+                flag = (of);                                         \
+                err  = fn(data, (c), &flag);                         \
+                if (err) goto exit;                                  \
+                                                                     \
+                assert(flag == FTV_DETACH || flag == FTV_NO_CHANGE); \
+                                                                     \
+                if (flag == FTV_DETACH) {                            \
+                        ftSubTreeFree((c));                          \
+                                                                     \
+                        /* swap the element with final one. */       \
+                        size_t s         = vecSize((p)->children);   \
+                        (p)->children[i] = (p)->children[s - 1];     \
+                        vecSetSize((p)->children, s - 1);            \
+                        continue; /* without advancing i */          \
+                }                                                    \
         } while (0)
 
                 if (preorder) {

@@ -39,21 +39,21 @@ buildTree()
 }
 
 static error_t
-print_tree_fn(void *data, struct ft_node *node, _out_ int *outflag)
+print_tree_fn(void *data, struct ft_node *node, _out_ int *flag)
 {
         sds_t *s   = (sds_t *)data;
         sds_t path = fpJoinSds(node->root_dir, node->path);
         sdsCatPrintf(s, "%s\n", path);
         sdsFree(path);
-        *outflag = FTV_NO_CHANGE;
+        *flag = FTV_NO_CHANGE;
         return OK;
 }
 
 static error_t
-print_tree_fn_outflagcheck(void *data, struct ft_node *node, _out_ int *outflag)
+print_tree_fn_outflagcheck(void *data, struct ft_node *node, _out_ int *flag)
 {
-        if ((*outflag) == 1) {
-                *outflag = FTV_NO_CHANGE;
+        if ((*flag) == 1) {
+                *flag = FTV_NO_CHANGE;
                 return OK;
         }
 
@@ -61,14 +61,14 @@ print_tree_fn_outflagcheck(void *data, struct ft_node *node, _out_ int *outflag)
         sds_t path = fpJoinSds(node->root_dir, node->path);
         sdsCatPrintf(s, "%s\n", path);
         sdsFree(path);
-        *outflag = FTV_NO_CHANGE;
+        *flag = FTV_NO_CHANGE;
         return OK;
 }
 
 static error_t
-detach_all_fn(void *data, struct ft_node *node, _out_ int *outflag)
+detach_all_fn(void *data, struct ft_node *node, _out_ int *flag)
 {
-        *outflag = FTV_DETACH;
+        *flag = FTV_DETACH;
         return OK;
 }
 

@@ -16,13 +16,13 @@
            // skipped.
 
 // inout:
-//     outflag (in):
+//     flag (in):
 //         0 preorder visit
 //         1 postorder visit
-//     outflag (out):
+//     flag (out):
 //         OR based FTV_xxx output signals above
 typedef error_t (*ft_visit_fn_t)(void *data, struct ft_node *,
-                                 _out_ int *outflag);
+                                 _inout_ int *flag);
 
 // input signal to ftVisit controler (ctl)
 #define FTV_PREORDER  1  // parent node first
