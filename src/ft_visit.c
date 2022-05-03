@@ -12,25 +12,24 @@ static void ftDumpImpl(int fd, struct ft_node *node, _mut_ sds_t *space);
 // public apis impl
 // -----------------------------------------------------------------------------
 
-// dump the tree representation to fd (say stdout).
-void
-ftDump(int fd, struct ft_node *root)
-{
-        sds_t space = sdsEmpty();
-        dprintf(fd, "%sroot - %s\n", space, root->root_dir);
-
-        ftDumpImpl(fd, root, &space);
-        sdsFree(space);
-}
-
 static error_t ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node,
-                           int preorder, int postorder);
+                           int preorder, int postorder, int dir_ok,
+                           int file_ok);
 
 error_t
 ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root, int inflag)
 {
+        // cannot be set both
+        assert(!((inflag & FTV_FILEONLY) && (inflag & FTV_DIRONLY)));
+
+        // root must be dir
+        assert(root->is_dir);
+
         int preorder  = (inflag & FTV_PREORDER);
         int postorder = (inflag & FTV_POSTORDER);
+
+        int dir_ok  = (inflag & FTV_FILEONLY) == 0;
+        int file_ok = (inflag & FTV_DIRONLY) == 0;
 
         error_t err = OK;
         int flag;
@@ -50,18 +49,16 @@ ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root, int inflag)
         } while (0)
 
         // special case for root node only.
-        if (preorder) {
+        if (dir_ok && preorder) {
                 HANDLE_ROOT(0);
         }
 
-        err = ftVisitImpl(fn, data, root, preorder, postorder);
+        err = ftVisitImpl(fn, data, root, preorder, postorder, dir_ok, file_ok);
         if (err) goto exit;
 
         // special case for root node only.
-        if (postorder) {
-                // for file node, if preorder has processed it, we should skip
-                // here.
-                if (root->is_dir || !preorder) HANDLE_ROOT(1);
+        if (dir_ok && postorder) {
+                HANDLE_ROOT(1);
         }
 
 #undef HANDLE_ROOT
@@ -72,7 +69,7 @@ exit:
 
 error_t
 ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder,
-            int postorder)
+            int postorder, int dir_ok, int file_ok)
 {
         error_t err = OK;
         int flag;
@@ -104,7 +101,8 @@ ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder,
                         HANDLE_NODE(node, child, 0);
                 }
 
-                err = ftVisitImpl(fn, data, child, preorder, postorder);
+                err = ftVisitImpl(fn, data, child, preorder, postorder, dir_ok,
+                                  file_ok);
                 if (err) goto exit;
 
                 if (postorder) {
@@ -126,8 +124,36 @@ exit:
 }
 
 // -----------------------------------------------------------------------------
+// public supporting fns impl
+// -----------------------------------------------------------------------------
+
+void
+ftDumpSds(_mut_ sds_t *s, struct ft_node *root)
+{
+}
+
+// dump the tree representation to fd (say stdout).
+void
+ftDump(int fd, struct ft_node *root)
+{
+        sds_t space = sdsEmpty();
+        dprintf(fd, "%sroot - %s\n", space, root->root_dir);
+
+        ftDumpImpl(fd, root, &space);
+        sdsFree(space);
+}
+
+// -----------------------------------------------------------------------------
 // helper impl
 // -----------------------------------------------------------------------------
+
+// static error_t fdDumpVisitFn(void * data, struct ft_node* node, int* outflag)
+// {
+//         int is_dir = node->is_dir;
+//
+//         // print node it self and then. We need two hooks ....
+//         return OK;
+// }
 
 static void
 ftDumpImpl(int fd, struct ft_node *node, sds_t *space)

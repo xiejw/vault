@@ -30,7 +30,11 @@ typedef error_t (*ft_visit_fn_t)(void *data, struct ft_node *,
 #define FTV_BOTHORDER \
         (FTV_PREORDER | FTV_POSTORDER)  // visit dir node twice (if first
                                         // visit is not detach)
+#define FTV_DIRONLY  4  // dir only  (cannot set with FTV_FILEONLY)
+#define FTV_FILEONLY 8  // file only (cannot set with FTV_DIRONLY)
 
+// arg:
+//     root: dir node
 // in:
 //     intflag: OR based FTV_xxx input signals above
 extern error_t ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root,
@@ -40,5 +44,6 @@ extern error_t ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root,
 // supporting fns
 // -----------------------------------------------------------------------------
 extern void ftDump(int fd, struct ft_node *root);
+extern void ftDumpSds(_mut_ sds_t *s, struct ft_node *root);
 
 #endif  // FS_VISIT_H
