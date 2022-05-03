@@ -175,6 +175,7 @@ test_dump_tree()
         ASSERT_TRUE("check output", strcmp(expected, s) == 0);
 
         sdsFree(s);
+        ftFree(root);
         return NULL;
 }
 
