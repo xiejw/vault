@@ -269,6 +269,7 @@ test_detach_preorder()
         struct ft_node *root = buildTree();
         err                  = ftVisit(detach_all_fn, NULL, root, FTV_PREORDER);
         ASSERT_TRUE("no err", err == OK);
+        // detach will free root.
         return NULL;
 }
 
@@ -279,6 +280,7 @@ test_detach_postorder()
         struct ft_node *root = buildTree();
         err = ftVisit(detach_all_fn, NULL, root, FTV_POSTORDER);
         ASSERT_TRUE("no err", err == OK);
+        // detach will free root.
         return NULL;
 }
 
@@ -289,6 +291,7 @@ test_detach_bothorder()
         struct ft_node *root = buildTree();
         err = ftVisit(detach_all_fn, NULL, root, FTV_BOTHORDER);
         ASSERT_TRUE("no err", err == OK);
+        // detach will free root.
         return NULL;
 }
 
@@ -304,6 +307,7 @@ test_dump_tree()
             "    +-> b\n";
         ASSERT_TRUE("check dump", strcmp(expected, s) == 0);
         sdsFree(s);
+        ftFree(root);
         return NULL;
 }
 
