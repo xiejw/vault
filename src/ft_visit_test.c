@@ -292,6 +292,21 @@ test_detach_bothorder()
         return NULL;
 }
 
+static char *
+test_dump_tree()
+{
+        struct ft_node *root = buildTree();
+        sds_t s              = sdsEmpty();
+        ftDumpSds(&s, root);
+        const char *expected =
+            "root - /root/\n"
+            "    +-> a/ (+)\n"
+            "    +-> b\n";
+        ASSERT_TRUE("check dump", strcmp(expected, s) == 0);
+        sdsFree(s);
+        return NULL;
+}
+
 DECLARE_TEST_SUITE(ft_visit)
 {
         RUN_TEST(test_print_tree_preorder);
@@ -307,5 +322,6 @@ DECLARE_TEST_SUITE(ft_visit)
         RUN_TEST(test_detach_preorder);
         RUN_TEST(test_detach_postorder);
         RUN_TEST(test_detach_bothorder);
+        RUN_TEST(test_dump_tree);
         return NULL;
 }

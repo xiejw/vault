@@ -3,13 +3,7 @@
 #include <stdio.h>  // dprintf
 
 // -----------------------------------------------------------------------------
-// helper prototypes
-// -----------------------------------------------------------------------------
-
-static void ftDumpImpl(int fd, struct ft_node *node, _mut_ sds_t *space);
-
-// -----------------------------------------------------------------------------
-// public apis impl
+// public visit apis impl
 // -----------------------------------------------------------------------------
 
 static error_t ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node,
@@ -66,6 +60,10 @@ ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root, int inflag)
 exit:
         return err;
 }
+
+// -----------------------------------------------------------------------------
+// helper impl for visit
+// -----------------------------------------------------------------------------
 
 error_t
 ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder,
@@ -134,54 +132,97 @@ exit:
 // public supporting fns impl
 // -----------------------------------------------------------------------------
 
+static error_t fdDumpVisitFn(void *data, struct ft_node *node, int *flag);
+
+struct visit_dump_ctx {
+        sds_t space;
+        int fd;
+        sds_t *buf;  // if NULL write to fd above
+};
+
+// dump the tree representation to s (say stdout).
 void
 ftDumpSds(_mut_ sds_t *s, struct ft_node *root)
 {
+        struct visit_dump_ctx ctx = {
+            .fd = -1, .space = sdsNew("    "), .buf = s};
+        sdsCatPrintf(s, "root - %s\n", root->root_dir);
+        ftVisit(fdDumpVisitFn, &ctx, root, FTV_BOTHORDER);  // ignore err
+        sdsFree(ctx.space);
 }
 
 // dump the tree representation to fd (say stdout).
 void
 ftDump(int fd, struct ft_node *root)
 {
-        sds_t space = sdsEmpty();
-        dprintf(fd, "%sroot - %s\n", space, root->root_dir);
-
-        ftDumpImpl(fd, root, &space);
-        sdsFree(space);
+        struct visit_dump_ctx ctx = {
+            .fd = fd, .space = sdsNew("    "), .buf = NULL};
+        dprintf(fd, "root - %s\n", root->root_dir);
+        ftVisit(fdDumpVisitFn, &ctx, root, FTV_BOTHORDER);  // ignore err
+        sdsFree(ctx.space);
 }
 
 // -----------------------------------------------------------------------------
-// helper impl
+// helper impl for supporting fns
 // -----------------------------------------------------------------------------
 
-// static error_t fdDumpVisitFn(void * data, struct ft_node* node, int* outflag)
-// {
-//         int is_dir = node->is_dir;
-//
-//         // print node it self and then. We need two hooks ....
-//         return OK;
-// }
-
-static void
-ftDumpImpl(int fd, struct ft_node *node, sds_t *space)
+error_t
+fdDumpVisitFn(void *data, struct ft_node *node, int *flag)
 {
-        int is_dir;
-        // append 4 spaces.
-        sdsCatPrintf(space, "    ");
+        int is_dir   = node->is_dir;
+        int preorder = (*flag) == 0;
 
-        for (size_t i = 0; i < vecSize(node->children); i++) {
-                struct ft_node *child = node->children[i];
-                is_dir                = child->is_dir;
-                dprintf(fd, "%s+-> %s%s\n", *space, child->path,
-                        is_dir ? " (+)" : "");
+        if (node->parent == NULL) goto exit;
 
-                if (is_dir) {
-                        ftDumpImpl(fd, child, space);
-                }
+        struct visit_dump_ctx *ctx = (struct visit_dump_ctx *)data;
+
+        if (preorder) {
+                if (ctx->buf == NULL)
+                        dprintf(ctx->fd, "%s+-> %s%s\n", ctx->space, node->path,
+                                is_dir ? " (+)" : "");
+                else
+                        sdsCatPrintf(ctx->buf, "%s+-> %s%s\n", ctx->space,
+                                     node->path, is_dir ? " (+)" : "");
         }
 
-        // remove 4 spaces
-        size_t len = sdsLen(*space);
-        sdsSetLen(*space, len - 4);
-        (*space)[len - 4] = 0;
+        if (is_dir && preorder) {
+                // append 4 spaces.
+                sdsCatPrintf(&ctx->space, "    ");
+        }
+
+        if (is_dir && !preorder) {
+                // remove 4 spaces
+                size_t len = sdsLen(ctx->space);
+                sdsSetLen(ctx->space, len - 4);
+                ctx->space[len - 4] = 0;
+        }
+
+exit:
+
+        *flag = FTV_NO_CHANGE;
+        return OK;
 }
+
+// static void
+// ftDumpImpl(int fd, struct ft_node *node, sds_t *space)
+// {
+//         int is_dir;
+//         // append 4 spaces.
+//         sdsCatPrintf(space, "    ");
+//
+//         for (size_t i = 0; i < vecSize(node->children); i++) {
+//                 struct ft_node *child = node->children[i];
+//                 is_dir                = child->is_dir;
+//                 dprintf(fd, "%s+-> %s%s\n", *space, child->path,
+//                         is_dir ? " (+)" : "");
+//
+//                 if (is_dir) {
+//                         ftDumpImpl(fd, child, space);
+//                 }
+//         }
+//
+//         // remove 4 spaces
+//         size_t len = sdsLen(*space);
+//         sdsSetLen(*space, len - 4);
+//         (*space)[len - 4] = 0;
+// }
