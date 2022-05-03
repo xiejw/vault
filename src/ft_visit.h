@@ -29,7 +29,8 @@ typedef error_t (*ft_visit_fn_t)(void *data, struct ft_node *,
 #define FTV_POSTORDER 2  // parent node final
 #define FTV_BOTHORDER \
         (FTV_PREORDER | FTV_POSTORDER)  // visit dir node twice (if first
-                                        // visit is not detach)
+                                        // visit is not detach). File node will
+                                        // be visted once (preorder).
 #define FTV_DIRONLY  4  // dir only  (cannot set with FTV_FILEONLY)
 #define FTV_FILEONLY 8  // file only (cannot set with FTV_DIRONLY)
 

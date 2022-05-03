@@ -130,6 +130,120 @@ test_print_tree_bothorder()
 }
 
 static char *
+test_print_tree_preorder_dironly()
+{
+        error_t err;
+        struct ft_node *root = buildTree();
+
+        sds_t s = sdsEmpty();
+        err     = ftVisit(print_tree_fn, &s, root, FTV_PREORDER | FTV_DIRONLY);
+
+        const char *expected = "/root\n/root/a\n";
+
+        ASSERT_TRUE("no err", err == OK);
+        ASSERT_TRUE("output", strcmp(expected, s) == 0);
+
+        sdsFree(s);
+        ftFree(root);
+        return NULL;
+}
+
+static char *
+test_print_tree_postorder_dironly()
+{
+        error_t err;
+        struct ft_node *root = buildTree();
+
+        sds_t s = sdsEmpty();
+        err     = ftVisit(print_tree_fn, &s, root, FTV_POSTORDER | FTV_DIRONLY);
+
+        const char *expected = "/root/a\n/root\n";
+
+        ASSERT_TRUE("no err", err == OK);
+        ASSERT_TRUE("output", strcmp(expected, s) == 0);
+
+        sdsFree(s);
+        ftFree(root);
+        return NULL;
+}
+
+static char *
+test_print_tree_bothorder_dironly()
+{
+        error_t err;
+        struct ft_node *root = buildTree();
+
+        sds_t s = sdsEmpty();
+        err     = ftVisit(print_tree_fn, &s, root, FTV_BOTHORDER | FTV_DIRONLY);
+
+        const char *expected = "/root\n/root/a\n/root/a\n/root\n";
+
+        ASSERT_TRUE("no err", err == OK);
+        ASSERT_TRUE("output", strcmp(expected, s) == 0);
+
+        sdsFree(s);
+        ftFree(root);
+        return NULL;
+}
+
+static char *
+test_print_tree_preorder_fileonly()
+{
+        error_t err;
+        struct ft_node *root = buildTree();
+
+        sds_t s = sdsEmpty();
+        err     = ftVisit(print_tree_fn, &s, root, FTV_PREORDER | FTV_FILEONLY);
+
+        const char *expected = "/root/b\n";
+
+        ASSERT_TRUE("no err", err == OK);
+        ASSERT_TRUE("output", strcmp(expected, s) == 0);
+
+        sdsFree(s);
+        ftFree(root);
+        return NULL;
+}
+
+static char *
+test_print_tree_postorder_fileonly()
+{
+        error_t err;
+        struct ft_node *root = buildTree();
+
+        sds_t s = sdsEmpty();
+        err = ftVisit(print_tree_fn, &s, root, FTV_POSTORDER | FTV_FILEONLY);
+
+        const char *expected = "/root/b\n";
+
+        ASSERT_TRUE("no err", err == OK);
+        ASSERT_TRUE("output", strcmp(expected, s) == 0);
+
+        sdsFree(s);
+        ftFree(root);
+        return NULL;
+}
+
+static char *
+test_print_tree_bothorder_fileonly()
+{
+        error_t err;
+        struct ft_node *root = buildTree();
+
+        sds_t s = sdsEmpty();
+        err = ftVisit(print_tree_fn, &s, root, FTV_BOTHORDER | FTV_FILEONLY);
+
+        const char *expected = "/root/b\n";
+
+        ASSERT_TRUE("no err", err == OK);
+        ASSERT_TRUE("output", strcmp(expected, s) == 0);
+
+        sdsFree(s);
+        ftFree(root);
+        return NULL;
+}
+
+static char *
 test_print_tree_bothorder_outflagcheck()
 {
         error_t err;
@@ -183,6 +297,12 @@ DECLARE_TEST_SUITE(ft_visit)
         RUN_TEST(test_print_tree_preorder);
         RUN_TEST(test_print_tree_postorder);
         RUN_TEST(test_print_tree_bothorder);
+        RUN_TEST(test_print_tree_preorder_dironly);
+        RUN_TEST(test_print_tree_postorder_dironly);
+        RUN_TEST(test_print_tree_bothorder_dironly);
+        RUN_TEST(test_print_tree_preorder_fileonly);
+        RUN_TEST(test_print_tree_postorder_fileonly);
+        RUN_TEST(test_print_tree_bothorder_fileonly);
         RUN_TEST(test_print_tree_bothorder_outflagcheck);
         RUN_TEST(test_detach_preorder);
         RUN_TEST(test_detach_postorder);

@@ -97,19 +97,26 @@ ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder,
                 }                                                    \
         } while (0)
 
-                if (preorder) {
-                        HANDLE_NODE(node, child, 0);
-                }
+                if (child->is_dir) {  // dir node
+                        if (dir_ok && preorder) {
+                                HANDLE_NODE(node, child, 0);
+                        }
 
-                err = ftVisitImpl(fn, data, child, preorder, postorder, dir_ok,
-                                  file_ok);
-                if (err) goto exit;
+                        // for dir, we will walk into the tree regardless
+                        // dir_ok bit.
+                        err = ftVisitImpl(fn, data, child, preorder, postorder,
+                                          dir_ok, file_ok);
+                        if (err) goto exit;
 
-                if (postorder) {
-                        // for file node, if preorder has processed it, we
-                        // should skip here.
-                        if (child->is_dir || !preorder)
+                        if (dir_ok && postorder) {
                                 HANDLE_NODE(node, child, 1);
+                        }
+                } else if (file_ok) {  // file node. visit file node only once
+                        if (preorder) {
+                                HANDLE_NODE(node, child, 0);
+                        } else if (postorder) {
+                                HANDLE_NODE(node, child, 1);
+                        }
                 }
 
                 // advance to next one
