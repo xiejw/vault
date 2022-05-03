@@ -15,14 +15,21 @@
            // if with FTV_PREORDER, the subtree visit will be
            // skipped.
 
-// out:
-//     outflag: OR based FTV_xxx output signals above
+// inout:
+//     outflag (in):
+//         0 preorder visit
+//         1 postorder visit
+//     outflag (out):
+//         OR based FTV_xxx output signals above
 typedef error_t (*ft_visit_fn_t)(void *data, struct ft_node *,
                                  _out_ int *outflag);
 
 // input signal to ftVisit controler (ctl)
-#define FTV_PREORDER  0  // parent node first
-#define FTV_POSTORDER 1  // parent node final
+#define FTV_PREORDER  1  // parent node first
+#define FTV_POSTORDER 2  // parent node final
+#define FTV_BOTHORDER \
+        (FTV_PREORDER | FTV_POSTORDER)  // visit dir node twice (if first
+                                        // visit is not detach)
 
 // in:
 //     intflag: OR based FTV_xxx input signals above

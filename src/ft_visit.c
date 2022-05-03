@@ -24,19 +24,20 @@ ftDump(int fd, struct ft_node *root)
 }
 
 static error_t ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node,
-                           int preorder);
+                           int preorder, int postorder);
 
 error_t
 ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root, int inflag)
 {
-        int preorder = inflag == FTV_PREORDER;
+        int preorder  = (inflag & FTV_PREORDER);
+        int postorder = (inflag & FTV_POSTORDER);
 
         error_t err = OK;
         int outflag;
 
-#define HANDLE_ROOT()                                                      \
+#define HANDLE_ROOT(of)                                                    \
         do {                                                               \
-                outflag = FTV_NO_CHANGE;                                   \
+                outflag = (of);                                            \
                 err     = fn(data, root, &outflag);                        \
                 if (err) goto exit;                                        \
                                                                            \
@@ -50,15 +51,17 @@ ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root, int inflag)
 
         // special case for root node only.
         if (preorder) {
-                HANDLE_ROOT();
+                HANDLE_ROOT(0);
         }
 
-        err = ftVisitImpl(fn, data, root, preorder);
+        err = ftVisitImpl(fn, data, root, preorder, postorder);
         if (err) goto exit;
 
         // special case for root node only.
-        if (!preorder) {
-                HANDLE_ROOT();
+        if (postorder) {
+                // for file node, if preorder has processed it, we should skip
+                // here.
+                if (root->is_dir || !preorder) HANDLE_ROOT(1);
         }
 
 #undef HANDLE_ROOT
@@ -68,7 +71,8 @@ exit:
 }
 
 error_t
-ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder)
+ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder,
+            int postorder)
 {
         error_t err = OK;
         int outflag;
@@ -77,9 +81,9 @@ ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder)
         for (size_t i = 0; i < vecSize(node->children);) {
                 struct ft_node *child = node->children[i];
 
-#define HANDLE_NODE(p, c)                                                  \
+#define HANDLE_NODE(p, c, of)                                              \
         do {                                                               \
-                outflag = FTV_NO_CHANGE;                                   \
+                outflag = (of);                                            \
                 err     = fn(data, (c), &outflag);                         \
                 if (err) goto exit;                                        \
                                                                            \
@@ -97,14 +101,17 @@ ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder)
         } while (0)
 
                 if (preorder) {
-                        HANDLE_NODE(node, child);
+                        HANDLE_NODE(node, child, 0);
                 }
 
-                err = ftVisitImpl(fn, data, child, preorder);
+                err = ftVisitImpl(fn, data, child, preorder, postorder);
                 if (err) goto exit;
 
-                if (!preorder) {
-                        HANDLE_NODE(node, child);
+                if (postorder) {
+                        // for file node, if preorder has processed it, we
+                        // should skip here.
+                        if (child->is_dir || !preorder)
+                                HANDLE_NODE(node, child, 1);
                 }
 
                 // advance to next one
