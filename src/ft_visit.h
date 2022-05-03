@@ -44,6 +44,7 @@ extern error_t ftVisit(ft_visit_fn_t fn, void *data, struct ft_node *root,
 // -----------------------------------------------------------------------------
 // supporting fns
 // -----------------------------------------------------------------------------
+extern void ftSort(struct ft_node *root);
 extern void ftDump(int fd, struct ft_node *root);
 extern void ftDumpSds(_mut_ sds_t *s, struct ft_node *root);
 

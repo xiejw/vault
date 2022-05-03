@@ -156,19 +156,21 @@ test_dump_tree()
         err = ftWalk(root, &cfg);
         ASSERT_TRUE("no err", err == OK);
 
+        ftSort(root);
+
         sds_t s = sdsEmpty();
 
         ftDumpSds(&s, root);
 
         const char *expected =
             "root - tests/test_tree/a\n"
-            "    +-> h\n"
-            "    +-> d\n"
+            "    +-> b (+)\n"
+            "        +-> b/c\n"
             "    +-> e (+)\n"
             "        +-> e/f (+)\n"
             "            +-> e/f/g\n"
-            "    +-> b (+)\n"
-            "        +-> b/c\n";
+            "    +-> d\n"
+            "    +-> h\n";
 
         ASSERT_TRUE("check output", strcmp(expected, s) == 0);
 

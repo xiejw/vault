@@ -133,6 +133,7 @@ exit:
 // -----------------------------------------------------------------------------
 
 static error_t fdDumpVisitFn(void *data, struct ft_node *node, int *flag);
+static error_t ftSortFn(void *data, struct ft_node *node, int *flag);
 
 struct visit_dump_ctx {
         sds_t space;
@@ -160,6 +161,13 @@ ftDump(int fd, struct ft_node *root)
         dprintf(fd, "root - %s\n", root->root_dir);
         ftVisit(fdDumpVisitFn, &ctx, root, FTV_BOTHORDER);  // ignore err
         sdsFree(ctx.space);
+}
+
+void
+ftSort(struct ft_node *root)
+{
+        ftVisit(ftSortFn, NULL, root,
+                FTV_PREORDER | FTV_DIRONLY);  // ignore err
 }
 
 // -----------------------------------------------------------------------------
@@ -203,26 +211,36 @@ exit:
         return OK;
 }
 
-// static void
-// ftDumpImpl(int fd, struct ft_node *node, sds_t *space)
-// {
-//         int is_dir;
-//         // append 4 spaces.
-//         sdsCatPrintf(space, "    ");
-//
-//         for (size_t i = 0; i < vecSize(node->children); i++) {
-//                 struct ft_node *child = node->children[i];
-//                 is_dir                = child->is_dir;
-//                 dprintf(fd, "%s+-> %s%s\n", *space, child->path,
-//                         is_dir ? " (+)" : "");
-//
-//                 if (is_dir) {
-//                         ftDumpImpl(fd, child, space);
-//                 }
-//         }
-//
-//         // remove 4 spaces
-//         size_t len = sdsLen(*space);
-//         sdsSetLen(*space, len - 4);
-//         (*space)[len - 4] = 0;
-// }
+error_t
+ftSortFn(void *data, struct ft_node *node, int *flag)
+{
+        (void)data;
+        assert(node->is_dir);
+
+        // stupid bubble sort here
+        size_t ct = vecSize(node->children);
+        if (ct == 0) goto exit;
+
+        for (size_t i = 0; i < ct; i++) {
+                for (size_t j = i + 1; j < ct; j++) {
+                        struct ft_node *l = node->children[i];
+                        struct ft_node *r = node->children[j];
+
+                        int score = 0;
+                        int cmp   = strcmp(l->path, r->path);
+                        if (cmp > 0) score++;
+                        if (cmp < 0) score--;
+                        if (l->is_dir) score -= 10;
+                        if (r->is_dir) score += 10;
+
+                        if (score > 0) {
+                                node->children[j] = l;
+                                node->children[i] = r;
+                        }
+                }
+        }
+
+exit:
+        *flag = FTV_NO_CHANGE;
+        return OK;
+}
