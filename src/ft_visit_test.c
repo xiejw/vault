@@ -7,6 +7,10 @@
 // vault
 #include "ft_visit.h"
 
+// -----------------------------------------------------------------------------
+// helper methods for building trees
+// -----------------------------------------------------------------------------
+
 static struct ft_node *
 buildTree()
 {
@@ -109,6 +113,10 @@ buildTreeWithTwoLayers()
         return root;
 }
 
+// -----------------------------------------------------------------------------
+// helper methods for visit fns
+// -----------------------------------------------------------------------------
+
 static error_t
 print_tree_fn(void *data, struct ft_node *node, _out_ int *flag)
 {
@@ -142,6 +150,10 @@ detach_all_fn(void *data, struct ft_node *node, _out_ int *flag)
         *flag = FTV_DETACH;
         return OK;
 }
+
+// -----------------------------------------------------------------------------
+// tests for visit
+// -----------------------------------------------------------------------------
 
 static char *
 test_print_tree_preorder()
@@ -366,6 +378,10 @@ test_detach_bothorder()
         return NULL;
 }
 
+// -----------------------------------------------------------------------------
+// tests for supporting fns
+// -----------------------------------------------------------------------------
+
 static char *
 test_dump_tree()
 {
@@ -419,8 +435,26 @@ test_sort_tree()
         return NULL;
 }
 
+static char *
+test_trim_empty_dir()
+{
+        struct ft_node *root = buildTree();
+        sds_t s              = sdsEmpty();
+
+        ftTrimEmptyDir(root);
+        ftDumpSds(&s, root);
+        const char *expected =
+            "root - /root/\n"
+            "    +-> b\n";
+        ASSERT_TRUE("check dump", strcmp(expected, s) == 0);
+        sdsFree(s);
+        ftFree(root);
+        return NULL;
+}
+
 DECLARE_TEST_SUITE(ft_visit)
 {
+        // visit
         RUN_TEST(test_print_tree_preorder);
         RUN_TEST(test_print_tree_postorder);
         RUN_TEST(test_print_tree_bothorder);
@@ -434,7 +468,10 @@ DECLARE_TEST_SUITE(ft_visit)
         RUN_TEST(test_detach_preorder);
         RUN_TEST(test_detach_postorder);
         RUN_TEST(test_detach_bothorder);
+
+        // supporting fns
         RUN_TEST(test_dump_tree);
         RUN_TEST(test_sort_tree);
+        RUN_TEST(test_trim_empty_dir);
         return NULL;
 }

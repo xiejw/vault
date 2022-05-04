@@ -134,6 +134,7 @@ exit:
 
 static error_t fdDumpVisitFn(void *data, struct ft_node *node, int *flag);
 static error_t ftSortFn(void *data, struct ft_node *node, int *flag);
+static error_t ftTrimEmptyDirFn(void *data, struct ft_node *node, int *flag);
 
 struct visit_dump_ctx {
         sds_t space;
@@ -167,6 +168,13 @@ void
 ftSort(struct ft_node *root)
 {
         ftVisit(ftSortFn, NULL, root,
+                FTV_PREORDER | FTV_DIRONLY);  // ignore err
+}
+
+void
+ftTrimEmptyDir(struct ft_node *root)
+{
+        ftVisit(ftTrimEmptyDirFn, NULL, root,
                 FTV_PREORDER | FTV_DIRONLY);  // ignore err
 }
 
@@ -215,6 +223,7 @@ error_t
 ftSortFn(void *data, struct ft_node *node, int *flag)
 {
         (void)data;
+        assert(*flag == 0);
         assert(node->is_dir);
 
         // stupid bubble sort here
@@ -242,5 +251,19 @@ ftSortFn(void *data, struct ft_node *node, int *flag)
 
 exit:
         *flag = FTV_NO_CHANGE;
+        return OK;
+}
+
+error_t
+ftTrimEmptyDirFn(void *data, struct ft_node *node, int *flag)
+{
+        assert(node->is_dir);
+        assert(*flag == 0);
+
+        if (vecSize(node->children) == 0) {
+                *flag = FTV_DETACH;
+        } else {
+                *flag = FTV_NO_CHANGE;
+        }
         return OK;
 }
