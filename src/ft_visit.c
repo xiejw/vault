@@ -91,7 +91,7 @@ ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder,
                         size_t s         = vecSize((p)->children);   \
                         (p)->children[i] = (p)->children[s - 1];     \
                         vecSetSize((p)->children, s - 1);            \
-                        continue; /* without advancing i */          \
+                        goto next_iter; /* without advancing i */    \
                 }                                                    \
         } while (0)
 
@@ -117,10 +117,12 @@ ftVisitImpl(ft_visit_fn_t fn, void *data, struct ft_node *node, int preorder,
                         }
                 }
 
+#undef HANDLE_NODE
+
                 // advance to next one
                 i++;
 
-#undef HANDLE_NODE
+        next_iter:;
         }
 
 exit:
