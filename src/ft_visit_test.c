@@ -38,6 +38,77 @@ buildTree()
         return root;
 }
 
+// good for sorting:
+static struct ft_node *
+buildTreeWithTwoLayers()
+{
+        // root ->
+        //     z (+)
+        //       +- d
+        //       +- c
+        //     y (+)
+        //     b
+        //     a
+        sds_t root_dir = sdsNew("/root/");
+
+        struct ft_node *root = ftNodeNew();
+        root->root_dir       = root_dir;
+        root->path           = sdsEmpty();
+        root->is_dir         = 1;
+
+        struct ft_node *node_dir = ftNodeNew();
+        node_dir->parent         = root;
+        node_dir->root_dir       = root_dir;
+        node_dir->path           = sdsNew("z");
+        node_dir->is_dir         = 1;
+
+        vecPushBack(&root->children, node_dir);
+
+        {
+                struct ft_node *node_file = ftNodeNew();
+                node_file->parent         = root;
+                node_file->root_dir       = root_dir;
+                node_file->path           = sdsNew("d");
+                node_file->is_dir         = 0;
+
+                vecPushBack(&node_dir->children, node_file);
+
+                node_file           = ftNodeNew();
+                node_file->parent   = root;
+                node_file->root_dir = root_dir;
+                node_file->path     = sdsNew("c");
+                node_file->is_dir   = 0;
+
+                vecPushBack(&node_dir->children, node_file);
+        }
+
+        node_dir           = ftNodeNew();
+        node_dir->parent   = root;
+        node_dir->root_dir = root_dir;
+        node_dir->path     = sdsNew("y");
+        node_dir->is_dir   = 1;
+
+        vecPushBack(&root->children, node_dir);
+
+        struct ft_node *node_file = ftNodeNew();
+        node_file->parent         = root;
+        node_file->root_dir       = root_dir;
+        node_file->path           = sdsNew("b");
+        node_file->is_dir         = 0;
+
+        vecPushBack(&root->children, node_file);
+
+        node_file           = ftNodeNew();
+        node_file->parent   = root;
+        node_file->root_dir = root_dir;
+        node_file->path     = sdsNew("a");
+        node_file->is_dir   = 0;
+
+        vecPushBack(&root->children, node_file);
+
+        return root;
+}
+
 static error_t
 print_tree_fn(void *data, struct ft_node *node, _out_ int *flag)
 {
@@ -311,6 +382,43 @@ test_dump_tree()
         return NULL;
 }
 
+static char *
+test_sort_tree()
+{
+        struct ft_node *root = buildTreeWithTwoLayers();
+        sds_t s              = sdsEmpty();
+
+        ftDumpSds(&s, root);
+        const char *expected =
+            "root - /root/\n"
+            "    +-> z (+)\n"
+            "        +-> d\n"
+            "        +-> c\n"
+            "    +-> y (+)\n"
+            "    +-> b\n"
+            "    +-> a\n";
+        ASSERT_TRUE("check dump", strcmp(expected, s) == 0);
+        sdsClear(s);
+
+        ftSort(root);
+        ftDumpSds(&s, root);
+
+        expected =
+            "root - /root/\n"
+            "    +-> y (+)\n"
+            "    +-> z (+)\n"
+            "        +-> c\n"
+            "        +-> d\n"
+            "    +-> a\n"
+            "    +-> b\n";
+
+        ASSERT_TRUE("check dump again", strcmp(expected, s) == 0);
+
+        sdsFree(s);
+        ftFree(root);
+        return NULL;
+}
+
 DECLARE_TEST_SUITE(ft_visit)
 {
         RUN_TEST(test_print_tree_preorder);
@@ -327,5 +435,6 @@ DECLARE_TEST_SUITE(ft_visit)
         RUN_TEST(test_detach_postorder);
         RUN_TEST(test_detach_bothorder);
         RUN_TEST(test_dump_tree);
+        RUN_TEST(test_sort_tree);
         return NULL;
 }
