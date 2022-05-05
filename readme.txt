@@ -3,17 +3,20 @@
 ================================================================================
 OVERVIEW~
 
-{Banana} is a folder-level file backup system. It does not make any changes to
-user's folder but could answer the following questions
+{vault} is a folder-level file backup system. It does not make any changes to
+user's folder but could answer the following questions efficiently
 
-1. Any file change since last check? Or historical changes in the past.
-2. When does a file get added/deleted/mutated? And how?
-3. With recent removed files, do they have a copy (duplicated or moved) in the
-   folder?
-4. (Plugin) How to recover a file, even it is a deleted?
+1. Any file change since last check?
+    - or any historical changes in the past.
+2. When does a file get added/deleted/mutated?
+3. With recent removed files, do they have a copy in the folder?
+    - so this is a safe move rather than unexpected deletion.
+4. How to recover a file, even it is a deleted?
 
-The design was motivated by the photo repository backup system. But it should
-be general enough for other important folders.
+The design was motivated by the photo repository backup system and git system.
+But it should be general enough for other important folders, especially with
+file system organized by symbolic links (link to external hard disk due to
+space limitation).
 
 ================================================================================
 DESIGN~
@@ -26,31 +29,31 @@ DESIGN~
                                  |
                                  |                                    user space
     -----------------------------+----------------------------------------------
-                                 |                                  banana space
+                                 |                                   vault space
                                  |
                            +------------+
-                           |  banana    |
+                           |  vault     |
                            +------------+
                                  |
                     +------------+-----------------------+
-                    |                                    | (if provided)
+                    |                                    |
                     v                                    v
               +-------------+                        +----------+
               | history_log |                        |  pool    |
               +-------------+                        +----------+
 <
 
-{history_log} is an incremental, cmd log like, plain text file which records
-              the change from scratch to the one (called 'a') snapshot of the
+{folder}      is user's directory to be backed up. |vault| will never mutate
+              it. It is assumed the |history_log| is never newer than
+              |folder|.
+
+{history_log} is an incremental, change log like, plain text file which records
+{hlog}        the change from scratch to the snapshot (called 'a') of the
               folder. It records file add/delete in each line with checksum
               (sha256) and time stamp (epoch seconds).
 
               Due to the fact it is append-only, any change in history can be
               queried easily.
-
-{folder}      is user's directory to be backed up. |banana| will never mutate
-              it. It is assumed the |history_log| is never newer than
-              |folder|.
 
 {pool}        is a folder which contains all copies of the files in |folder|,
               including all the files which were deleted in the past. To make
@@ -62,23 +65,29 @@ DESIGN~
 
                   "0xabcde.jpg"
 
-              As it could consume tons of spaces, it will be optional.
+              So limit the number of files in one folder, we copy the git
+              design and store the file like
+
+                  "0x"/"abcde.jpg"
+
+              As it could consume tons of spaces, it will be on one external
+              harddrive with enough spaces.
 
 ================================================================================
 WORKFLOW~
 
-- {step0}:  |banana| loads |history_log| and creates a in-memory snapshot 'a'.
-- {step1a}: |banana| checks whether all checksums (including the
+- {step0}:  |vault| loads |history_log| and creates a in-memory snapshot 'a'.
+- {step1a}: |vault| checks whether all checksums (including the
             deleted ones) are in the |pool|.
 
-- {step1b}: In parallel (with |step0| -> |step1a|), |banana| walks the user
+- {step1b}: In parallel (with |step0| -> |step1a|), |vault| walks the user
             folder and creates a in-memory snapshot 'b'.
 
 - {step2}:  join |step1a| and |step1b|, then go to |step3|.
 
-- {step3}:  |banana| generates diffs between snapshots 'a' and 'b' and
+- {step3}:  |vault| generates diffs between snapshots 'a' and 'b' and
             computes some statistics (how many new files, delete files, etc).
-- {step4}:  |banana| promots the user and gets permission to proceed. Depends on
+- {step4}:  |vault| promots the user and gets permission to proceed. Depends on
             the answer, will split to two branches |step5a| and |step5b|.
 
 - {step5a}: If no, stop.
@@ -90,6 +99,8 @@ WORKFLOW~
 ================================================================================
 INTERNAL DATA STRUCTURES~
 
+TODO: Needs change to reflect the c code
+
 >
                                      +--------+
                                      | Folder |
@@ -97,7 +108,7 @@ INTERNAL DATA STRUCTURES~
                                          |
                                          |                            user space
     -------------------------------------+--------------------------------------
-                                         |                          banana space
+                                         |                           vault space
                                     FromLocalFS
                                          |       +- ConvertTo --+
              +--> FromCmdLogs ---+       v       |              |
