@@ -44,13 +44,13 @@ DESIGN~
 <
 
 {folder}      is user's directory to be backed up. |vault| will never mutate
-              it. It is assumed the |history_log| is never newer than
+              it. It is assumed the |history_log|(|hlog|) is never newer than
               |folder|.
 
 {history_log} is an incremental, change log like, plain text file which records
-{hlog}        the change from scratch to the snapshot (called 'a') of the
-              folder. It records file add/delete in each line with checksum
-              (sha256) and time stamp (epoch seconds).
+{hlog}        the change from scratch to the snapshot of the folder. It
+              records file add/delete in each line with checksum (sha256) and
+              time stamp (epoch seconds).
 
               Due to the fact it is append-only, any change in history can be
               queried easily.
@@ -109,13 +109,14 @@ TODO: Needs change to reflect the c code
                                          |                            user space
     -------------------------------------+--------------------------------------
                                          |                           vault space
-                                    FromLocalFS
-                                         |       +- ConvertTo --+
-             +--> FromCmdLogs ---+       v       |              |
+                                      ftWalk
+                                         |       +-   ftDiff  --+
+             +-->  hlogToFt ----+        v       |              |
  +---------+ |                   |  +----------+ |              v
- | CmdLogs |-+                   +->| FileTree |-+        +------------+
- +---------+                        +----------+          | DiffResult |
-      ^                                                   +------------+
+ |   hlog  |-+                   +->|    ft    |-+        +------------+
+ +---------+                        +----------+          | diff: vec_l|
+      ^                                                   |       vec_r|
+      r                                                   +------------+
       |                                                         |
-      +----------------------------- ToCmdLogs <----------------+
+      +-------------------------- hlogFromDiff <----------------+
 <
