@@ -80,9 +80,9 @@ ftDiffHandleSubTree(const struct ft_node *l, const struct ft_node *r,
                 // TODO bisec (by types) child name in r (j == -1) means not
                 // find note the order is type -> name. Is this doable? Only
                 // search in type?
-                size_t j = -1;
+                size_t j = 0;  // placeholder value.
 
-                if (j == -1) {
+                if (j == 0) {
                         // TODO put file/dir of l_child in only_f_in_l
                         continue;
                 }
@@ -94,10 +94,8 @@ ftDiffHandleSubTree(const struct ft_node *l, const struct ft_node *r,
 
                 offset_r = j;
 
-                struct ft_node *r_child =
-                    r_children[j] if (sdsCmp(l_child->checksum ==
-                                             r_child->checksum) == 0)
-                {
+                struct ft_node *r_child = r_children[j];
+                if (sdsCmp(l_child->checksum, r_child->checksum) == 0) {
                         assert(l_child->is_dir == r_child->is_dir);
                         continue;
                 }
