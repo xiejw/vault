@@ -4,6 +4,9 @@
 // eva
 #include <adt/vec.h>
 
+// vault
+#include <ft.h>
+
 // -----------------------------------------------------------------------------
 // public history log data structures
 // -----------------------------------------------------------------------------
@@ -49,13 +52,14 @@
 struct hlog {
         int cmd;                     // 1 means addition and 0 means deletion.
         u64_t timestamp;             // epoch in seconds.
-        unsigned char[64] checksum;  // sha256 checksum.
-        sds_t epath;                 // path for the file component.
+        unsigned char checksum[64];  // sha256 checksum.
+        sds_t path;                  // file path (exclude root_dir).
 };
 
 // convert the hlog list into a ft_node tree.
 //
 // Empty dir will be removed. But it is not sorted.
-extern struct ft_node* hlogToFt(vec_t(struct* hlog) hlogs);
+extern struct ft_node *hlogToFt(_moved_in_ sds_t root_dir,
+                                vec_t(struct hlog *) hlogs);
 
 #endif  // HLOG_H_

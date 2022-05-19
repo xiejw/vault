@@ -23,7 +23,7 @@ FMT_FOLDERS     =  ${CMD} ${SRC}
 # libs
 # ------------------------------------------------------------------------------
 ALL_LIBS        = ${BUILD}/ft.o ${BUILD}/ft_walk.o ${BUILD}/ft_visit.o \
-		  ${BUILD}/ft_diff.o
+		  ${BUILD}/ft_diff.o ${BUILD}/hlog.o
 
 # ------------------------------------------------------------------------------
 # actions
