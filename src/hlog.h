@@ -1,6 +1,9 @@
 #ifndef HLOG_H_
 #define HLOG_H_
 
+// eva
+#include <adt/vec.h>
+
 // -----------------------------------------------------------------------------
 // public history log data structures
 // -----------------------------------------------------------------------------
@@ -40,11 +43,19 @@
 // "+ 1652901470
 // e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 foo/bar"
 
+#define HLOG_ADD 1
+#define HLOG_DEL 0
+
 struct hlog {
         int cmd;                     // 1 means addition and 0 means deletion.
         u64_t timestamp;             // epoch in seconds.
         unsigned char[64] checksum;  // sha256 checksum.
         sds_t epath;                 // path for the file component.
 };
+
+// convert the hlog list into a ft_node tree.
+//
+// Empty dir will be removed. But it is not sorted.
+extern struct ft_node* hlogToFt(vec_t(struct* hlog) hlogs);
 
 #endif  // HLOG_H_
