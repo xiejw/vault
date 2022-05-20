@@ -43,8 +43,11 @@
 //
 // A quick summary could be:
 //
-// "+ 1652901470
-// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 foo/bar"
+// clang-format off
+//
+// "+ 1652901470 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 foo/bar"
+//
+// clang-format on
 
 #define HLOG_ADD 1
 #define HLOG_DEL 0
@@ -52,11 +55,11 @@
 struct hlog {
         int cmd;                         // 1: addition and 0: deletion.
         u64_t timestamp;                 // epoch in seconds.
-        unsigned char checksum[64 + 1];  // 0-ended sha256 checksum.
         sds_t path;                      // file path (exclude root_dir).
+        unsigned char checksum[64 + 1];  // 0-ended sha256 checksum.
 };
 
-// convert the hlog list into a ft_node tree.
+// convert the hlog list into an ft_node tree.
 //
 // Empty dir will be removed. But it is not sorted.
 extern error_t hlogToFt(_moved_in_ sds_t root_dir, vec_t(struct hlog *) hlogs,
