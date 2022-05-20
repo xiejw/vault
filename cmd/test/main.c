@@ -37,6 +37,7 @@ main()
 
         ADD_SUITE(ft_diff);   // src/ft_diff_test.c
         ADD_SUITE(ft_visit);  // src/ft_visit_test.c
+        ADD_SUITE(hlog);      // src/hlog_test.c
 
         // integration
 
