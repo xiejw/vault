@@ -15,36 +15,49 @@
         }
 
 static char *
-test_empty_roots()
+test_hlogs_to_ft()
 {
         error_t err;
 
-        vec_t(struct hlog *) logs = vecNew();
-        struct hlog a             = ENTRY_ADD("foo/bar/abc");
-        struct hlog b             = ENTRY_ADD("foo/bar/def");
-        struct hlog c             = ENTRY_ADD("bar/def");
-        struct hlog d             = ENTRY_ADD("abc");
-        vecPushBack(&logs, &a);
-        vecPushBack(&logs, &b);
-        vecPushBack(&logs, &c);
-        vecPushBack(&logs, &d);
+        // create hlogs.
+        vec_t(struct hlog *) hlogs = vecNew();
+        struct hlog a              = ENTRY_ADD("foo/bar/abc");
+        struct hlog b              = ENTRY_ADD("foo/bar/def");
+        struct hlog c              = ENTRY_ADD("bar/def");
+        struct hlog d              = ENTRY_ADD("abc");
+        vecPushBack(&hlogs, &a);
+        vecPushBack(&hlogs, &b);
+        vecPushBack(&hlogs, &c);
+        vecPushBack(&hlogs, &d);
 
         struct ft_node *root;
-        err = hlogToFt("/root_dir", logs, &root);
+        sds_t root_dir = sdsNew("/root_dir");  // owned by root later.
 
+        // create ft
+        err = hlogToFt(root_dir, hlogs, &root);
         ASSERT_TRUE("no err", err == OK);
 
-        sds_t s = sdsEmpty();
-        ftDumpSds(&s, root);
-        printf("tree:\n%s", s);
-        sdsFree(s);
+        // check tree structure
+        {
+                sds_t s = sdsEmpty();
+                ftDumpSds(&s, root);
+                printf("tree:\n%s", s);
+                sdsFree(s);
+        }
 
-        vecFree(logs);
+        // free hlogs
+        for (size_t i = 0; i < vecSize(hlogs); i++) {
+                sdsFree(hlogs[i]->path);
+        }
+        vecFree(hlogs);
+
+        // free tree
+        ftFree(root);
         return NULL;
 }
 
 DECLARE_TEST_SUITE(hlog)
 {
-        RUN_TEST(test_empty_roots);
+        RUN_TEST(test_hlogs_to_ft);
         return NULL;
 }
