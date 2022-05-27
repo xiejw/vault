@@ -59,6 +59,10 @@ struct hlog {
         unsigned char checksum[64 + 1];  // 0-ended sha256 checksum.
 };
 
+// -----------------------------------------------------------------------------
+// public factory apis
+// -----------------------------------------------------------------------------
+
 // convert the hlog list into an ft_node tree.
 //
 // Empty dir will be removed. But it is not sorted.

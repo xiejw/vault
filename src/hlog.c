@@ -17,7 +17,7 @@ hlogToFt(sds_t root_dir, vec_t(struct hlog *) hlogs, struct ft_node **root)
         size_t hlog_count = vecSize(hlogs);
         if (hlog_count == 0) return errNew("empty hlogs are not allowed.");
 
-        struct hlog *hl;
+        const struct hlog *hl;
         struct ft_node *n;
         *root = ftRootNew(root_dir);
 
@@ -33,7 +33,7 @@ hlogToFt(sds_t root_dir, vec_t(struct hlog *) hlogs, struct ft_node **root)
                 assert(hl->cmd == HLOG_ADD);
 
                 // both are owned by node 'n'.
-                sds_t checksum = sdsNew((char *)hl->checksum);
+                sds_t checksum = sdsNew((const char *)hl->checksum);
                 sds_t path     = sdsNew(hl->path);
 
                 n           = ftNodeNew();
