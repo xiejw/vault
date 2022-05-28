@@ -69,4 +69,9 @@ struct hlog {
 extern error_t hlogToFt(_moved_in_ sds_t root_dir, vec_t(struct hlog *) hlogs,
                         _out_ struct ft_node **root);
 
+// convert lines in sds 's' to hlog list (appending in 'hlogs').
+//
+// see hlog file spec above.
+extern error_t hlogFromSds(const sds_t s, _mut_ vec_t(struct hlog *) hlogs);
+
 #endif  // HLOG_H_
