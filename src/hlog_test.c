@@ -37,7 +37,7 @@ freeHlogs(vec_t(struct hlog *) hlogs)
 }
 
 // -----------------------------------------------------------------------------
-// tests
+// unit tests for hlogToFt
 // -----------------------------------------------------------------------------
 static char *
 test_hlogs_to_ft()
@@ -82,8 +82,26 @@ test_hlogs_to_ft()
         return NULL;
 }
 
+// -----------------------------------------------------------------------------
+// unit tests for hlogToFt
+// -----------------------------------------------------------------------------
+static char *
+test_hlogs_from_empty_sds()
+{
+        sds_t s                    = sdsEmpty();
+        vec_t(struct hlog *) hlogs = vecNew();
+
+        ASSERT_TRUE("no err", OK == hlogFromSds(s, &hlogs));
+        ASSERT_TRUE("no change", 0 == vecSize(hlogs));
+
+        vecFree(hlogs);
+        sdsFree(s);
+        return NULL;
+}
+
 DECLARE_TEST_SUITE(hlog)
 {
         RUN_TEST(test_hlogs_to_ft);
+        RUN_TEST(test_hlogs_from_empty_sds);
         return NULL;
 }

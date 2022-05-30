@@ -32,14 +32,14 @@ hlogToFt(sds_t root_dir, vec_t(struct hlog *) hlogs, struct ft_node **root)
 
                 assert(hl->cmd == HLOG_ADD);
 
-                // both are owned by node 'n'.
+                // both sds are owned by node 'n'.
                 sds_t checksum = sdsNew((const char *)hl->checksum);
                 sds_t path     = sdsNew(hl->path);
 
                 n           = ftNodeNew();
                 n->path     = path;      // moved in
                 n->checksum = checksum;  // moved in
-                // 'parent' field will be added by attachNodeToRoot.
+                // Note: 'parent' field will be added by attachNodeToRoot.
 
                 if (attachNodeToRoot(*root, n) != OK)
                         return errEmitNote(
@@ -48,6 +48,16 @@ hlogToFt(sds_t root_dir, vec_t(struct hlog *) hlogs, struct ft_node **root)
         }
 
         return OK;
+}
+
+error_t
+hlogFromSds(const sds_t s, vec_t(struct hlog *) * hlogs)
+{
+        size_t size = sdsLen(s);
+        size_t i    = 0;
+
+        if (i == size) return OK;
+        return errNew("hlogFromSds only supports empty sds buffer.");
 }
 
 // -----------------------------------------------------------------------------
