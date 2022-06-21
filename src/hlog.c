@@ -50,14 +50,40 @@ hlogToFt(sds_t root_dir, vec_t(struct hlog *) hlogs, struct ft_node **root)
         return OK;
 }
 
+// move to pritvate
+
+static error_t
+consumeLine(const sds_t s, size_t *index, struct hlog **hlog)
+{
+        return errNew("hlogFromSds only supports empty sds buffer.");
+}
+
 error_t
 hlogFromSds(const sds_t s, vec_t(struct hlog *) * hlogs)
 {
         size_t size = sdsLen(s);
         size_t i    = 0;
+        error_t err = OK;
 
+        // fast path, unlikely.
         if (i == size) return OK;
-        return errNew("hlogFromSds only supports empty sds buffer.");
+
+        struct hlog *hlog;
+        size_t line_num = 0;
+
+        while (1) {
+                err = consumeLine(s, &i, &hlog);
+                if (err != OK) {
+                        err = errEmitNote("failed to parse line number: %zu",
+                                          line_num);
+                        goto exit;
+                }
+                line_num++;
+                if (hlog == NULL) break;  // end of sds.
+        }
+
+exit:
+        return err;
 }
 
 // -----------------------------------------------------------------------------

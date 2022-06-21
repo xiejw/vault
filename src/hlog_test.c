@@ -83,7 +83,7 @@ test_hlogs_to_ft()
 }
 
 // -----------------------------------------------------------------------------
-// unit tests for hlogToFt
+// unit tests for hlogFromSds
 // -----------------------------------------------------------------------------
 static char *
 test_hlogs_from_empty_sds()
@@ -99,9 +99,24 @@ test_hlogs_from_empty_sds()
         return NULL;
 }
 
+static char *
+test_hlogs_from_oneline()
+{
+        sds_t s                    = sdsNew("not working");
+        vec_t(struct hlog *) hlogs = vecNew();
+
+        ASSERT_TRUE("err unsupported", OK != hlogFromSds(s, &hlogs));
+        // ASSERT_TRUE("no change", 0 == vecSize(hlogs));
+
+        vecFree(hlogs);
+        sdsFree(s);
+        return NULL;
+}
+
 DECLARE_TEST_SUITE(hlog)
 {
         RUN_TEST(test_hlogs_to_ft);
         RUN_TEST(test_hlogs_from_empty_sds);
+        RUN_TEST(test_hlogs_from_oneline);
         return NULL;
 }
