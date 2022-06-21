@@ -1,6 +1,52 @@
-# vim: shiftwidth=4
+# vim: shiftwidth=4 ft=help
+
+--------------------------------------------------------------------------------
+TODO
 
 impl hlogFromSds
 impl tree diff
 impl quicksort.
 impl checksum for even folder.
+
+================================================================================
+DATA STRUCTURE
+
+--------------------------------------------------------------------------------
+*hlog*
+
+*struct_hlog*
+- file: |hlog.h|
+- apis
+  - hlogToFt
+  - hlogFromSds
+
+--------------------------------------------------------------------------------
+*ft*
+
+*struct_ft_node*
+- fle: |ft.h|
+- apis
+  - ftRootNew
+  - ftFree
+- low level api
+  - ftNodeNew
+  - ftNodeFreeShallow
+  - ftSubTreeFree
+
+*ft_walk*
+- file: |ft_walk.h|
+- api: ftWalk
+
+*ft_visit*
+- file: |ft_visit.h|
+- apis:
+  - ftVisit
+- helper apis:
+  - ftSort
+  - ftDump
+  - ftDumpSds
+  - ftTrimEmptyDir
+
+*ft_diff*
+- file: |ft_diff.h|
+- api: ftDiff

@@ -15,6 +15,9 @@ struct ft_walk_config {
         int dangling_sym_link;  // see FT_XXX above
 };
 
+// ftWalk will take the 'root' agument, which is pre-filled with a legitimate
+// tree node with 'root_dir' (empty chilren), walk into that tree, and expands
+// the file tree by attaching all nodes to the 'root' node.
 extern error_t ftWalk(struct ft_node *root, const struct ft_walk_config *cfg);
 
 #endif  // FS_WALK_H_
