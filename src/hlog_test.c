@@ -100,14 +100,42 @@ test_hlogs_from_empty_sds()
 }
 
 static char *
+test_hlogs_fail_with_newline_only()
+{
+        sds_t s                    = sdsNew("\n");
+        vec_t(struct hlog *) hlogs = vecNew();
+
+        ASSERT_TRUE("expect err", OK != hlogFromSds(s, &hlogs));
+
+        errFree();
+        vecFree(hlogs);
+        sdsFree(s);
+        return NULL;
+}
+
+static char *
 test_hlogs_from_oneline()
+{
+        sds_t s                    = sdsNew("+\n");
+        vec_t(struct hlog *) hlogs = vecNew();
+        ASSERT_TRUE("no err", OK == hlogFromSds(s, &hlogs));
+        ASSERT_TRUE("size", 1 == vecSize(hlogs));
+        ASSERT_TRUE("op", 1 == hlogs[0]->cmd);
+
+        freeHlogs(hlogs);
+        sdsFree(s);
+        return NULL;
+}
+
+static char *
+test_hlogs_fail_with_invalid_string()
 {
         sds_t s                    = sdsNew("not working");
         vec_t(struct hlog *) hlogs = vecNew();
 
         ASSERT_TRUE("err unsupported", OK != hlogFromSds(s, &hlogs));
-        // ASSERT_TRUE("no change", 0 == vecSize(hlogs));
 
+        errFree();
         vecFree(hlogs);
         sdsFree(s);
         return NULL;
@@ -117,6 +145,8 @@ DECLARE_TEST_SUITE(hlog)
 {
         RUN_TEST(test_hlogs_to_ft);
         RUN_TEST(test_hlogs_from_empty_sds);
+        RUN_TEST(test_hlogs_fail_with_newline_only);
         RUN_TEST(test_hlogs_from_oneline);
+        RUN_TEST(test_hlogs_fail_with_invalid_string);
         return NULL;
 }

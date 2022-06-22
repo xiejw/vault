@@ -50,21 +50,42 @@ hlogToFt(sds_t root_dir, vec_t(struct hlog *) hlogs, struct ft_node **root)
         return OK;
 }
 
-// move to pritvate
+// TODO: move to pritvate
 
 static error_t
-consumeOp()
+consumeOp(const sds_t s, size_t *index, size_t size, struct hlog *hl)
 {
+        if (*index >= size)
+                return errNew("expected to see hlog op (+/-), but got EOF");
+
+        char c = s[(*index)++];
+        switch (c) {
+        case '+':
+                hl->cmd = 1;
+                break;
+        case '-':
+                hl->cmd = 0;
+                break;
+        default:
+                return errNew("expected to see hlog op (+/-), but got %c", c);
+        }
         return OK;
 }
+
 static error_t
 consumeSpace()
 {
         return OK;
 }
 static error_t
-consumeNewLine()
+consumeNewLine(const sds_t s, size_t *index, size_t size)
 {
+        if (*index >= size)
+                return errNew("expected to see newline, but got EOF");
+
+        char c = s[(*index)++];
+        if (c != '\n') return errNew("expected to see newline, but got %c", c);
+
         return OK;
 }
 static error_t
@@ -78,15 +99,24 @@ consumeChecksum()
         return OK;
 }
 static error_t
-consumeFilePath()
+consumeFilePath(struct hlog *hl)
 {
+        hl->path = sdsEmpty();
         return OK;
 }
 
 static error_t
-consumeLine(const sds_t s, size_t *index, struct hlog **hlog)
+consumeLine(const sds_t s, size_t *index, size_t size, struct hlog **hlog)
 {
         error_t err = OK;
+        size_t i    = *index;
+
+        if (i == size) {  // end of sds
+                *hlog = NULL;
+                return OK;
+        }
+
+        struct hlog *hl = malloc(sizeof(*hl));
 
 #define OK_OR_EXIT(exp)            \
         do {                       \
@@ -96,20 +126,23 @@ consumeLine(const sds_t s, size_t *index, struct hlog **hlog)
                 }                  \
         } while (0)
 
-        OK_OR_EXIT(consumeOp());
+        OK_OR_EXIT(consumeOp(s, index, size, hl));
         OK_OR_EXIT(consumeSpace());
         OK_OR_EXIT(consumeTimestamp());
         OK_OR_EXIT(consumeSpace());
         OK_OR_EXIT(consumeChecksum());
         OK_OR_EXIT(consumeSpace());
-        OK_OR_EXIT(consumeFilePath());
-        OK_OR_EXIT(consumeNewLine());
-
-        OK_OR_EXIT(errNew("hlogFromSds only supports empty sds buffer."));
+        OK_OR_EXIT(consumeFilePath(hl));
+        OK_OR_EXIT(consumeNewLine(s, index, size));
 
 #undef OK_OR_EXIT
 
 exit:
+        if (err == OK) {
+                *hlog = hl;
+        } else {
+                free(hl);
+        }
         return err;
 }
 
@@ -120,14 +153,11 @@ hlogFromSds(const sds_t s, vec_t(struct hlog *) * hlogs)
         size_t i    = 0;
         error_t err = OK;
 
-        // fast path, unlikely.
-        if (i == size) return OK;
-
         struct hlog *hlog;
         size_t line_num = 0;
 
         while (1) {
-                err = consumeLine(s, &i, &hlog);
+                err = consumeLine(s, &i, size, &hlog);
                 if (err != OK) {
                         err = errEmitNote("failed to parse line number: %zu",
                                           line_num);
@@ -135,6 +165,7 @@ hlogFromSds(const sds_t s, vec_t(struct hlog *) * hlogs)
                 }
                 line_num++;
                 if (hlog == NULL) break;  // end of sds.
+                vecPushBack(hlogs, hlog);
         }
 
 exit:
