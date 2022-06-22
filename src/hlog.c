@@ -53,9 +53,64 @@ hlogToFt(sds_t root_dir, vec_t(struct hlog *) hlogs, struct ft_node **root)
 // move to pritvate
 
 static error_t
+consumeOp()
+{
+        return OK;
+}
+static error_t
+consumeSpace()
+{
+        return OK;
+}
+static error_t
+consumeNewLine()
+{
+        return OK;
+}
+static error_t
+consumeTimestamp()
+{
+        return OK;
+}
+static error_t
+consumeChecksum()
+{
+        return OK;
+}
+static error_t
+consumeFilePath()
+{
+        return OK;
+}
+
+static error_t
 consumeLine(const sds_t s, size_t *index, struct hlog **hlog)
 {
-        return errNew("hlogFromSds only supports empty sds buffer.");
+        error_t err = OK;
+
+#define OK_OR_EXIT(exp)            \
+        do {                       \
+                err = (exp);       \
+                if (OK != err) {   \
+                        goto exit; \
+                }                  \
+        } while (0)
+
+        OK_OR_EXIT(consumeOp());
+        OK_OR_EXIT(consumeSpace());
+        OK_OR_EXIT(consumeTimestamp());
+        OK_OR_EXIT(consumeSpace());
+        OK_OR_EXIT(consumeChecksum());
+        OK_OR_EXIT(consumeSpace());
+        OK_OR_EXIT(consumeFilePath());
+        OK_OR_EXIT(consumeNewLine());
+
+        OK_OR_EXIT(errNew("hlogFromSds only supports empty sds buffer."));
+
+#undef OK_OR_EXIT
+
+exit:
+        return err;
 }
 
 error_t
