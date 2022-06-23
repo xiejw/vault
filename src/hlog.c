@@ -53,12 +53,24 @@ hlogToFt(sds_t root_dir, vec_t(struct hlog *) hlogs, struct ft_node **root)
 // TODO: move to pritvate
 
 static error_t
-consumeOp(const sds_t s, size_t *index, size_t size, struct hlog *hl)
+consumeOneChar(const sds_t s, _inout_ size_t *index, const size_t size,
+               _inout_ char *c, char *err_msg)
 {
         if (*index >= size)
-                return errNew("expected to see hlog op (+/-), but got EOF");
+                return errNew("expected to see %s, but got EOF", err_msg);
 
-        char c = s[(*index)++];
+        *c = s[(*index)++];
+        return OK;
+}
+
+static error_t
+consumeOp(const sds_t s, size_t *index, size_t size, struct hlog *hl)
+{
+        char c;
+        if (OK != consumeOneChar(s, index, size, &c, "hlog op (+/-)")) {
+                return errNum();
+        }
+
         switch (c) {
         case '+':
                 hl->cmd = 1;
@@ -73,17 +85,24 @@ consumeOp(const sds_t s, size_t *index, size_t size, struct hlog *hl)
 }
 
 static error_t
-consumeSpace()
+consumeSpace(const sds_t s, size_t *index, size_t size)
 {
+        char c;
+        if (OK != consumeOneChar(s, index, size, &c, "single space")) {
+                return errNum();
+        }
+        if (c != ' ')
+                return errNew("expected to see single space, but got %c", c);
         return OK;
 }
+
 static error_t
 consumeNewLine(const sds_t s, size_t *index, size_t size)
 {
-        if (*index >= size)
-                return errNew("expected to see newline, but got EOF");
-
-        char c = s[(*index)++];
+        char c;
+        if (OK != consumeOneChar(s, index, size, &c, "newline")) {
+                return errNum();
+        }
         if (c != '\n') return errNew("expected to see newline, but got %c", c);
 
         return OK;
@@ -127,11 +146,11 @@ consumeLine(const sds_t s, size_t *index, size_t size, struct hlog **hlog)
         } while (0)
 
         OK_OR_EXIT(consumeOp(s, index, size, hl));
-        OK_OR_EXIT(consumeSpace());
+        OK_OR_EXIT(consumeSpace(s, index, size));
         OK_OR_EXIT(consumeTimestamp());
-        OK_OR_EXIT(consumeSpace());
+        OK_OR_EXIT(consumeSpace(s, index, size));
         OK_OR_EXIT(consumeChecksum());
-        OK_OR_EXIT(consumeSpace());
+        OK_OR_EXIT(consumeSpace(s, index, size));
         OK_OR_EXIT(consumeFilePath(hl));
         OK_OR_EXIT(consumeNewLine(s, index, size));
 

@@ -116,7 +116,7 @@ test_hlogs_fail_with_newline_only()
 static char *
 test_hlogs_from_oneline()
 {
-        sds_t s                    = sdsNew("+\n");
+        sds_t s                    = sdsNew("+   \n");
         vec_t(struct hlog *) hlogs = vecNew();
         ASSERT_TRUE("no err", OK == hlogFromSds(s, &hlogs));
         ASSERT_TRUE("size", 1 == vecSize(hlogs));
