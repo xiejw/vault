@@ -18,8 +18,30 @@ struct ft_node {
         sds_t checksum;                    // owned. Nullable
 };
 
+// Creates a single node representing the root. Its chilren is not filled.
+// Consider to call ftWalk to fill the real file system tree into this root
+// node.
+//
+// Sample code
+//
+//     struct ft_node *root = ftRootNew(sdsNew(root_dir));
+//
+//     struct ft_walk_config cfg = {
+//         .dangling_sym_link = FTW_WARNING,
+//     };
+//
+//     err = ftWalk(root, &cfg);
+//     if (err) {
+//         // handle errors.
+//     }
+//
+//     ftDump(1, root); // print the entire tree.
+//
+//     ftFree(root);
 extern struct ft_node *ftRootNew(_moved_in_ sds_t root_dir);
-extern void ftFree(struct ft_node *root);  // free the entire tree
+
+// Frees all resources for the entire tree pointed by the root node.
+extern void ftFree(struct ft_node *root);
 
 // -----------------------------------------------------------------------------
 // low level primitives

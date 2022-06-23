@@ -1,0 +1,55 @@
+# vim: shiftwidth=4 ft=help
+
+================================================================================
+API
+
+All APIs will have good companion documents, which should document all
+requirements, caveats, and behaviors. The goal should be: The readers do not
+need to look the implementation and then understand the APIs.
+
+Also APIs should be considered as easy to use and optimized for common use
+cases. For performance reasons, low level primitives might be provided
+occasionally.
+
+================================================================================
+DATA STRUCTURE
+
+--------------------------------------------------------------------------------
+*hlog*
+
+*struct_hlog*
+- file: |hlog.h|
+- apis
+  - hlogToFt
+  - hlogFromSds
+
+--------------------------------------------------------------------------------
+*ft*
+
+*struct_ft_node*
+- fle: |ft.h|
+- apis
+  - ftRootNew
+  - ftFree
+- low level api
+  - ftNodeNew
+  - ftNodeFreeShallow
+  - ftSubTreeFree
+
+*ft_walk*
+- file: |ft_walk.h|
+- api: ftWalk
+
+*ft_visit*
+- file: |ft_visit.h|
+- apis:
+  - ftVisit
+- helper apis:
+  - ftSort
+  - ftDump
+  - ftDumpSds
+  - ftTrimEmptyDir
+
+*ft_diff*
+- file: |ft_diff.h|
+- api: ftDiff

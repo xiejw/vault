@@ -63,15 +63,51 @@ struct hlog {
 // public factory apis
 // -----------------------------------------------------------------------------
 
-// convert the hlog list into an ft_node tree.
+// Convert the hlog list into an ft_node tree by performing each operation in
+// hlogs in sequence. The tree will be created and return via 'root'.
 //
-// Empty dir will be removed. But it is not sorted.
+// NOTE: Empty dir will be removed. But it is not sorted.
+//
+// For example, for a sequence of cmds like
+//
+//     cmd=1 timestamp=1652901470 checksum=... path=foo/bar
+//     cmd=0 timestamp=1652901470 checksum=... path=foo/bar
+//     cmd=1 timestamp=1652901470 checksum=... path=bar/2
+//     cmd=1 timestamp=1652901470 checksum=... path=bar/3
+//     cmd=1 timestamp=1652901470 checksum=... path=bar/1/file
+//     cmd=0 timestamp=1652901470 checksum=... path=bar/3
+//     cmd=1 timestamp=1652901470 checksum=... path=bar/3
+//
+// The tree will look like
+//
+//     (root)
+//       +- 2
+//       +- 1 (dir)
+//          +- file
+//       +- 3
+//
 extern error_t hlogToFt(_moved_in_ sds_t root_dir, vec_t(struct hlog *) hlogs,
                         _out_ struct ft_node **root);
 
 // convert lines in sds 's' to hlog list (appending in 'hlogs').
 //
 // see hlog file spec above.
+//
+// Example:
+//     """(no newline)
+//     + 1652901470 a3b0c... foo/bar\n
+//     - 1652901470 a3b0c... foo/bar\n
+//     + 1652901470 c3b0c... bar/2\n
+//     + 1652901470 d3b0c... foo/3\n(eof here)
+//     """
+//
+// will be converted to
+//
+//     cmd=1 timestamp=1652901470 checksum=a... path=foo/bar
+//     cmd=0 timestamp=1652901470 checksum=a... path=foo/bar
+//     cmd=1 timestamp=1652901470 checksum=c... path=bar/2
+//     cmd=1 timestamp=1652901470 checksum=d... path=foo/3
+//
 extern error_t hlogFromSds(const sds_t s, _mut_ vec_t(struct hlog *) * hlogs);
 
 #endif  // HLOG_H_
