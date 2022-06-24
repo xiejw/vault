@@ -116,11 +116,12 @@ test_hlogs_fail_with_newline_only()
 static char *
 test_hlogs_from_oneline()
 {
-        sds_t s                    = sdsNew("+   \n");
+        sds_t s                    = sdsNew("+ 123  \n");
         vec_t(struct hlog *) hlogs = vecNew();
         ASSERT_TRUE("no err", OK == hlogFromSds(s, &hlogs));
         ASSERT_TRUE("size", 1 == vecSize(hlogs));
         ASSERT_TRUE("op", 1 == hlogs[0]->cmd);
+        ASSERT_TRUE("timestamp", 123 == hlogs[0]->timestamp);
 
         freeHlogs(hlogs);
         sdsFree(s);
