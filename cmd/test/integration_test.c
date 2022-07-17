@@ -6,8 +6,7 @@
 #include <base/types.h>
 
 // vault
-#include "ft_visit.h"
-#include "ft_walk.h"
+#include "ft.h"
 
 static char *
 test_walk_tree()

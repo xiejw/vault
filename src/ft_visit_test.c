@@ -5,7 +5,7 @@
 #include <base/fpath.h>
 
 // vault
-#include "ft_visit.h"
+#include "ft.h"
 
 // -----------------------------------------------------------------------------
 // helper methods for building trees

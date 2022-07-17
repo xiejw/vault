@@ -1,4 +1,4 @@
-#include "ft_walk.h"
+#include "ft.h"
 
 #include <dirent.h>
 #include <errno.h>

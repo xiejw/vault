@@ -1,4 +1,4 @@
-EVA_PATH        = ../eva
+EVA_PATH        = ${HOME}/Workspace//eva
 EVA_LIB         = ${EVA_PATH}/.build_release/libeva.a
 
 include ${EVA_PATH}/eva.mk
@@ -9,15 +9,16 @@ include ${EVA_PATH}/eva.mk
 
 CMD             =  cmd
 SRC             =  src
+INC             =  include
 
-CFLAGS          += -I${EVA_PATH}/src -I${SRC}
+CFLAGS          += -I${EVA_PATH}/src -I${SRC} -I${INC}
 
 LDFLAGS         += ${EVA_LIB}
 
 # ------------------------------------------------------------------------------
 # configurations, required by eva.mk
 # ------------------------------------------------------------------------------
-FMT_FOLDERS     =  ${CMD} ${SRC}
+FMT_FOLDERS     =  ${CMD} ${SRC} ${INC}
 
 # ------------------------------------------------------------------------------
 # libs
