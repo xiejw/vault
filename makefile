@@ -38,7 +38,7 @@ compile: ${BUILD} ${ALL_LIBS}
 # ------------------------------------------------------------------------------
 # rules for sub-modules
 # ------------------------------------------------------------------------------
-${BUILD}/%.o: ${SRC}/%.c
+${BUILD}/%.o: ${SRC}/%.c ${INC}/*.h
 	${EVA_CC} -o $@ -c $<
 
 ${BUILD}/integration_test.o: ${CMD}/test/integration_test.c
